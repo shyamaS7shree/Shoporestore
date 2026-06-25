@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
 
 function VerifyContent() {
   const searchParams = useSearchParams();
@@ -11,7 +12,7 @@ function VerifyContent() {
   useEffect(() => {
     if (!token) { setStatus('error'); setMessage('Invalid link.'); return; }
 
-    fetch(`http://localhost:5285/api/Auth/verify-email?token=${token}`)
+    apiFetch(`/api/Auth/verify-email?token=${token}`)
       .then(r => r.json())
       .then(data => { setStatus('success'); setMessage(data.message); })
       .catch(() => { setStatus('error'); setMessage('Something went wrong.'); });

@@ -23,7 +23,7 @@ import {
   updateCartQuantity,
   writeCart,
 } from '@/lib/cart';
-import { getUser } from '@/lib/api';
+import { apiFetch, getUser } from '@/lib/api';
 import AuthModal from '@/components/AuthModal';
 import RoundLoader from '@/components/RoundLoader';
 import {
@@ -165,7 +165,7 @@ export default function CartPage() {
     }
 
     try {
-      const res = await fetch(`/api/addresses?user_id=${encodeURIComponent(user.id)}`);
+      const res = await apiFetch(`/api/addresses?user_id=${encodeURIComponent(user.id)}`);
       const data = await res.json();
 
       if (Array.isArray(data)) {
@@ -265,7 +265,7 @@ export default function CartPage() {
     setModalPinLoading(true);
 
     try {
-      const response = await fetch(`/api/pincode/${cleanPin}`);
+      const response = await apiFetch(`/api/pincode/${cleanPin}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -292,7 +292,7 @@ export default function CartPage() {
       return;
     }
 
-    const res = await fetch('/api/addresses', {
+    const res = await apiFetch('/api/addresses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...addressForm, user_id: user.id }),
@@ -353,7 +353,7 @@ export default function CartPage() {
       setPaymentLoading(true);
 
       try {
-        const response = await fetch('/api/orders', {
+        const response = await apiFetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -401,7 +401,7 @@ export default function CartPage() {
     setPaymentLoading(true);
 
     try {
-      const orderRes = await fetch('/api/payment/create-order', {
+      const orderRes = await apiFetch('/api/payment/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: total }),
@@ -423,7 +423,7 @@ export default function CartPage() {
         description: 'Order Payment',
         order_id: order.id,
         handler: async (response: RazorpayResponse) => {
-          const verifyRes = await fetch('/api/payment/verify', {
+          const verifyRes = await apiFetch('/api/payment/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

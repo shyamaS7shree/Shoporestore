@@ -1,4 +1,17 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+
+export function buildApiUrl(path: string) {
+  if (/^https?:\/\//i.test(path)) return path;
+
+  const baseUrl = API_URL.replace(/\/$/, '');
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  return `${baseUrl}${normalizedPath}`;
+}
+
+export function apiFetch(path: string, init?: RequestInit) {
+  return fetch(buildApiUrl(path), init);
+}
 
 async function parseApiResponse(res: Response) {
   const text = await res.text();
@@ -23,7 +36,7 @@ async function parseApiResponse(res: Response) {
 
 async function apiRequest(path: string, init: RequestInit) {
   try {
-    const res = await fetch(`${API_URL}${path}`, init);
+    const res = await apiFetch(path, init);
     return parseApiResponse(res);
   } catch {
     return {

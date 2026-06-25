@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { AlertCircle, ArrowLeft, CheckCircle2, CreditCard, Home, Package, User, X } from 'lucide-react';
-import { getUser } from '@/lib/api';
+import { apiFetch, getUser } from '@/lib/api';
 import { addNotification } from '@/lib/notifications';
 import RoundLoader from '@/components/RoundLoader';
 
@@ -399,14 +399,14 @@ export default function OrderDetailsPage() {
       return;
     }
 
-    fetch(`/api/profile?user_id=${encodeURIComponent(storedUser.id)}`)
+    apiFetch(`/api/profile?user_id=${encodeURIComponent(storedUser.id)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((profile) => {
         if (profile?.phone) setProfilePhone(profile.phone);
       })
       .catch(() => {});
 
-    fetch(`/api/addresses?user_id=${encodeURIComponent(storedUser.id)}`)
+    apiFetch(`/api/addresses?user_id=${encodeURIComponent(storedUser.id)}`)
       .then((res) => (res.ok ? res.json() : []))
       .then((addresses) => {
         if (Array.isArray(addresses) && addresses[0]) {
@@ -415,7 +415,7 @@ export default function OrderDetailsPage() {
       })
       .catch(() => {});
 
-    fetch(`/api/orders?user_id=${encodeURIComponent(storedUser.id)}`)
+    apiFetch(`/api/orders?user_id=${encodeURIComponent(storedUser.id)}`)
       .then((res) => res.json())
       .then((data) => {
         if (!Array.isArray(data)) {
@@ -448,7 +448,7 @@ export default function OrderDetailsPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/orders', {
+      const response = await apiFetch('/api/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

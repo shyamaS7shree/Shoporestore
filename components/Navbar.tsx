@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Bell, Menu, Search, ShoppingCart, User, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { getUser, logout } from '@/lib/api';
+import { apiFetch, getUser, logout } from '@/lib/api';
 import { CartItem, getCartCount, getCartEventName, readCart } from '@/lib/cart';
 import AuthModal from '@/components/AuthModal';
 import {
@@ -504,7 +504,7 @@ export default function Navbar() {
     setChatLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await apiFetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

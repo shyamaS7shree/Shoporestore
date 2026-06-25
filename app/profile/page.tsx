@@ -15,7 +15,7 @@ import {
   Save,
   X,
 } from 'lucide-react';
-import { getRefreshToken, getToken, getUser, saveAuth } from '@/lib/api';
+import { apiFetch, getRefreshToken, getToken, getUser, saveAuth } from '@/lib/api';
 import RoundLoader from '@/components/RoundLoader';
 import { addNotification } from '@/lib/notifications';
 
@@ -345,7 +345,7 @@ export default function ProfilePage() {
 
       // Refresh from Supabase after the quick localStorage load.
       if (storedUser.id) {
-        fetch(`/api/profile?user_id=${encodeURIComponent(storedUser.id)}`)
+        apiFetch(`/api/profile?user_id=${encodeURIComponent(storedUser.id)}`)
           .then((res) => (res.ok ? res.json() : null))
           .then((data) => {
             if (!data) return;
@@ -395,7 +395,7 @@ export default function ProfilePage() {
     if (!user?.id) return Promise.resolve();
 
     setOrdersLoading(true);
-    return fetch(`/api/orders?user_id=${encodeURIComponent(user.id)}`)
+    return apiFetch(`/api/orders?user_id=${encodeURIComponent(user.id)}`)
       .then((res) => res.json())
       .then((data) => {
         if (!Array.isArray(data)) return;
@@ -454,7 +454,7 @@ export default function ProfilePage() {
     setCancellingOrderId(order.id);
 
     try {
-      const response = await fetch('/api/orders', {
+      const response = await apiFetch('/api/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -508,7 +508,7 @@ export default function ProfilePage() {
         throw new Error('Missing user id');
       }
 
-      const res = await fetch('/api/profile', {
+      const res = await apiFetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -899,7 +899,7 @@ export default function ProfilePage() {
                     onClick={() => {
                       if (user.id) {
                         setOrdersLoading(true);
-                        fetch(`/api/orders?user_id=${encodeURIComponent(user.id)}`)
+                        apiFetch(`/api/orders?user_id=${encodeURIComponent(user.id)}`)
                           .then((res) => res.json())
                           .then((data) => Array.isArray(data) && setOrders(data))
                           .finally(() => setOrdersLoading(false));

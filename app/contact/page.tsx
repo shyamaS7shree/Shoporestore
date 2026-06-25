@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import {
   ArrowRight,
   CheckCircle2,
@@ -51,7 +52,7 @@ export default function ContactPage() {
     const formData = new FormData(form);
 
     try {
-      const res = await fetch('/api/contact', {
+      const res = await apiFetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

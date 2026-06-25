@@ -23,6 +23,7 @@ import {
   Undo2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api';
 import { getProductById } from '@/lib/products';
 import { addToCart, getCartItemKey, removeCartItem, updateCartQuantity } from '@/lib/cart';
 import { saveDeliveryLocation } from '@/lib/deliveryLocation';
@@ -477,7 +478,7 @@ export default function ProductDetailPage({
     setPinLoading(true);
 
     try {
-      const response = await fetch(`/api/pincode/${cleanPin}`);
+      const response = await apiFetch(`/api/pincode/${cleanPin}`);
       const data = await response.json();
 
       if (!response.ok) {
