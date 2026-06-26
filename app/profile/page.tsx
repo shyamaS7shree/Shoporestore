@@ -37,6 +37,7 @@ type Order = {
   payment_id?: string;
   order_items?: Array<{
     id: string;
+    product_id?: string;
     quantity: number;
     price: number;
     product_name?: string;
@@ -64,6 +65,8 @@ type OrderSnapshotItem = {
   quantity: number;
   price: number;
 };
+
+type ProductImageLookup = Record<string, string>;
 
 const AVATAR_KEY = 'shopore_avatar';
 const AVATAR_EVENT = 'shopore-avatar-updated';
@@ -261,6 +264,7 @@ function canCancelOrder(order: Order) {
 }
 
 function getPrimaryOrderItem(items: Array<{
+  product_id?: string;
   product_name?: string;
   product_brand?: string;
   product_image?: string;
@@ -268,6 +272,24 @@ function getPrimaryOrderItem(items: Array<{
   price: number;
 }> = []) {
   return items[0];
+}
+
+async function loadProductImageLookup() {
+  const response = await apiFetch('/api/products');
+  const products = await response.json();
+
+  if (!Array.isArray(products)) return {};
+
+  return products.reduce<ProductImageLookup>((lookup, product) => {
+    const id = String(product.id || '');
+    const image = product.image || product.images?.[0];
+
+    if (id && image) {
+      lookup[id] = image;
+    }
+
+    return lookup;
+  }, {});
 }
 
 type ToastType = 'profile' | 'avatar' | 'order' | 'orderCancelled' | 'error' | null;
@@ -281,6 +303,8 @@ export default function ProfilePage() {
   const [previewAvatarOpen, setPreviewAvatarOpen] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderSnapshots, setOrderSnapshots] = useState<Record<string, OrderSnapshotItem[]>>({});
+  const [productImagesById, setProductImagesById] = useState<ProductImageLookup>({});
+  const [productImagesLoaded, setProductImagesLoaded] = useState(false);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
@@ -447,6 +471,20 @@ export default function ProfilePage() {
     setOrderSnapshots(JSON.parse(localStorage.getItem(ORDER_SNAPSHOT_KEY) || '{}'));
     refreshOrders();
   }, [activeTab, refreshOrders, user?.id]);
+
+  useEffect(() => {
+    if (activeTab !== 'orders' || productImagesLoaded) return;
+
+    loadProductImageLookup()
+      .then((lookup) => {
+        setProductImagesById(lookup);
+        setProductImagesLoaded(true);
+      })
+      .catch(() => {
+        setProductImagesById({});
+        setProductImagesLoaded(true);
+      });
+  }, [activeTab, productImagesLoaded]);
 
   const cancelOrder = async (order: Order) => {
     if (!user?.id || cancellingOrderId) return;
@@ -930,24 +968,27 @@ export default function ProfilePage() {
                         dbItems.length > 0
                           ? dbItems.map((item, index) => {
                             const snapshot = snapshotItems[index];
+                            const productId = item.product_id || snapshot?.product_id;
                             return {
                               id: item.id,
+                              product_id: productId,
                               quantity: item.quantity,
                               price: item.price,
                               product_name: item.product_name || snapshot?.name,
                               product_brand: item.product_brand || snapshot?.brand,
-                              product_image: item.product_image || snapshot?.image,
+                              product_image: item.product_image || snapshot?.image || (productId ? productImagesById[productId] : undefined),
                               product_size: item.product_size || snapshot?.size,
                               product_color: item.product_color || snapshot?.color,
                             };
                           })
                           : snapshotItems.map((item, index) => ({
                             id: `${order.id}-${index}`,
+                            product_id: item.product_id,
                             quantity: item.quantity,
                             price: item.price,
                             product_name: item.name,
                             product_brand: item.brand,
-                            product_image: item.image,
+                            product_image: item.image || (item.product_id ? productImagesById[item.product_id] : undefined),
                             product_size: item.size,
                             product_color: item.color,
                           }));

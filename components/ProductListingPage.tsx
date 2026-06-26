@@ -14,7 +14,8 @@ import {
   PackageSearch,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { getWishlistEventName, isInWishlist, toggleWishlist } from '@/lib/wishlist';
+import { apiFetch } from '@/lib/api';
+import { getWishlistEventName, isInWishlist, refreshWishlist, toggleWishlist } from '@/lib/wishlist';
 
 export interface Product {
   id: number;
@@ -331,6 +332,7 @@ function ProductCard({
   useEffect(() => {
     const syncWishlistState = () => setLiked(isInWishlist(wishlistId));
     syncWishlistState();
+    refreshWishlist().then(syncWishlistState).catch(() => syncWishlistState());
     window.addEventListener(getWishlistEventName(), syncWishlistState);
     window.addEventListener('storage', syncWishlistState);
 
@@ -368,11 +370,17 @@ function ProductCard({
 
         <button
           type="button"
-          onClick={(e) => {
+          onClick={async (e) => {
             e.preventDefault();
-            const added = toggleWishlist(wishlistProduct);
-            setLiked(added);
-            toast.success(added ? 'Added to your Wishlist' : 'Removed from Wishlist');
+            e.stopPropagation();
+            try {
+              const added = await toggleWishlist(wishlistProduct);
+              setLiked(added);
+              toast.success(added ? 'Added to your Wishlist' : 'Removed from Wishlist');
+            } catch (error) {
+              setLiked(false);
+              toast.error(error instanceof Error ? error.message : 'Could not update wishlist');
+            }
           }}
           className="absolute right-2 top-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm"
         >
@@ -421,12 +429,23 @@ function getDepartmentFromTitle(title: string) {
   return 'men';
 }
 
+function normalizeImagePath(path?: string) {
+  try {
+    return decodeURIComponent(path || '').toLowerCase();
+  } catch {
+    return (path || '').toLowerCase();
+  }
+}
+
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function ProductListingPage({ config }: ProductListingPageProps) {
   const [sortOpen, setSortOpen] = useState(false);
   const [sortBy, setSortBy] = useState('Popularity');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [apiProducts, setApiProducts] = useState<Product[]>([]);
+  const [apiLoaded, setApiLoaded] = useState(false);
+  const [apiAvailable, setApiAvailable] = useState(false);
 
   // Global filter state: map of filterLabel -> selected options[]
   const [filterSelections, setFilterSelections] = useState<Record<string, string[]>>({});
@@ -470,9 +489,80 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
     activeBrands.length > 0 ||
     Object.values(filterSelections).some((v) => v.length > 0);
 
+  useEffect(() => {
+    let cancelled = false;
+    const department = getDepartmentFromTitle(config.title);
+
+    setApiLoaded(false);
+
+    apiFetch(`/api/products?category=${encodeURIComponent(department)}`)
+      .then((response) => {
+        if (!response.ok) throw new Error('Products API failed');
+        return response.json();
+      })
+      .then((data) => {
+        if (cancelled || !Array.isArray(data)) return;
+
+        const normalizedProducts = data.map((product: any) => ({
+          id: Number(product.id),
+          brand: product.brand || 'Shopore',
+          name: product.name || product.description || 'Product',
+          description: product.description || product.name || 'Product',
+          price: Number(product.price || 0),
+          originalPrice: product.originalPrice == null ? undefined : Number(product.originalPrice),
+          image: product.image || product.images?.[0] || '',
+          category: product.category,
+          subCategory: product.subCategory,
+          size: product.variants?.[0]?.size,
+          color: product.variants?.[0]?.color,
+        })).filter((product: Product) => Number.isFinite(product.id) && product.id > 0);
+
+        const sectionProductsByImage = new Map(
+          config.products
+            .filter((product) => product.image)
+            .map((product) => [normalizeImagePath(product.image), product])
+        );
+
+        const matchingProducts = normalizedProducts
+          .map((product: Product) => {
+            const sectionProduct = sectionProductsByImage.get(normalizeImagePath(product.image));
+            if (!sectionProduct) return null;
+
+            return {
+              ...sectionProduct,
+              ...product,
+              category: sectionProduct.category || product.category,
+              subCategory: sectionProduct.subCategory || product.subCategory,
+              size: sectionProduct.size || product.size,
+              color: sectionProduct.color || product.color,
+              fit: sectionProduct.fit || product.fit,
+              discount: sectionProduct.discount,
+              offer: sectionProduct.offer,
+            };
+          })
+          .filter(Boolean) as Product[];
+
+        setApiProducts(matchingProducts);
+        setApiAvailable(true);
+        setApiLoaded(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setApiProducts([]);
+        setApiAvailable(false);
+        setApiLoaded(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [config.title, config.products]);
+
+  const catalogProducts = apiLoaded && apiAvailable ? apiProducts : apiLoaded ? config.products : [];
+
   // Build filtered + sorted product list
   const products = useMemo(() => {
-    let list = [...config.products];
+    let list = [...catalogProducts];
 
     // Filter by active brand pills
     if (activeBrands.length > 0) {
@@ -556,7 +646,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
     if (sortBy === 'Discount') list.sort((a, b) => (b.discount || 0) - (a.discount || 0));
 
     return list;
-  }, [config.products, sortBy, activeBrands, filterSelections]);
+  }, [catalogProducts, sortBy, activeBrands, filterSelections]);
 
   const renderFilterPanel = () => {
     const sizeFilter = config.filters.find((filter) => filter.label.toLowerCase() === 'size');
@@ -566,12 +656,12 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
     );
     const collectionOptions = Array.from(
       new Set(
-        config.products
+        catalogProducts
           .map((product) => product.subCategory || product.category || product.description)
           .filter(Boolean)
       )
     ).slice(0, 8) as string[];
-    const tagOptions = config.brands.slice(0, 8);
+    const tagOptions = Array.from(new Set([...config.brands, ...catalogProducts.map((product) => product.brand)])).slice(0, 8);
     const ratingOptions = ['4 Stars & Above', '3 Stars & Above', 'New Arrivals', 'Best Sellers'];
     const extraRowOptions: Record<string, string[]> = {
       Collections: collectionOptions,

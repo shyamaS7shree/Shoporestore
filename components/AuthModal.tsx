@@ -49,12 +49,18 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       phone: cleanMobile,
     });
 
-    if (res.message === 'OTP sent') {
+    if (res.success !== false && (res.message === 'OTP sent' || res.otp || res.success)) {
       setLoginStep('otp');
       setOtp('');
       setOtpEmail(res.email || '');
       setIsError(false);
-      setMessage(res.email ? `OTP sent to ${res.email}` : 'OTP sent to your registered email');
+      const otpMessage = res.otp
+        ? `Development OTP: ${res.otp}`
+        : res.email
+          ? `OTP sent to ${res.email}`
+          : 'OTP sent to your registered email';
+      setMessage(otpMessage);
+      toast.success(otpMessage);
       return true;
     }
 

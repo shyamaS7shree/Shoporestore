@@ -54,7 +54,7 @@ function LoginContent() {
 
         setOtpRequested(true);
         setOtp('');
-        toast.success(`OTP sent to ${res.email || `+91 ${nextPhone}`}`);
+        toast.success(res.otp ? `Development OTP: ${res.otp}` : `OTP sent to ${res.email || `+91 ${nextPhone}`}`);
         return;
       }
 
@@ -102,7 +102,7 @@ function LoginContent() {
 
       setOtp('');
       setOtpRequested(true);
-      toast.success(`OTP sent to ${res.email || `+91 ${nextPhone}`}`);
+      toast.success(res.otp ? `Development OTP: ${res.otp}` : `OTP sent to ${res.email || `+91 ${nextPhone}`}`);
     } catch {
       toast.error('Server error. Please try again.');
     } finally {

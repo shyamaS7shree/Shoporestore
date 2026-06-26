@@ -37,6 +37,7 @@ type Order = {
   delivery_address?: DeliveryAddress | null;
   order_items?: Array<{
     id: string;
+    product_id?: string;
     quantity: number;
     price: number;
     product_name?: string;
@@ -57,6 +58,8 @@ type OrderSnapshotItem = {
   quantity: number;
   price: number;
 };
+
+type ProductImageLookup = Record<string, string>;
 
 type TrackingStep = {
   label: string;
@@ -293,7 +296,29 @@ function getReturnSteps(returnRequest: ReturnRequest, now: number): TrackingStep
   return buildSteps(steps, now);
 }
 
-function getDisplayItems(order: Order | null, snapshots: Record<string, OrderSnapshotItem[]>) {
+async function loadProductImageLookup() {
+  const response = await apiFetch('/api/products');
+  const products = await response.json();
+
+  if (!Array.isArray(products)) return {};
+
+  return products.reduce<ProductImageLookup>((lookup, product) => {
+    const id = String(product.id || '');
+    const image = product.image || product.images?.[0];
+
+    if (id && image) {
+      lookup[id] = image;
+    }
+
+    return lookup;
+  }, {});
+}
+
+function getDisplayItems(
+  order: Order | null,
+  snapshots: Record<string, OrderSnapshotItem[]>,
+  productImagesById: ProductImageLookup
+) {
   if (!order) return [];
   const snapshotItems = snapshots[order.id] || [];
   const dbItems = order.order_items || [];
@@ -301,13 +326,15 @@ function getDisplayItems(order: Order | null, snapshots: Record<string, OrderSna
   if (dbItems.length > 0) {
     return dbItems.map((item, index) => {
       const snapshot = snapshotItems[index];
+      const productId = item.product_id || snapshot?.product_id;
       return {
         id: item.id,
+        product_id: productId,
         quantity: item.quantity,
         price: item.price,
         product_name: item.product_name || snapshot?.name,
         product_brand: item.product_brand || snapshot?.brand,
-        product_image: item.product_image || snapshot?.image,
+        product_image: item.product_image || snapshot?.image || (productId ? productImagesById[productId] : undefined),
         product_size: item.product_size || snapshot?.size,
         product_color: item.product_color || snapshot?.color,
       };
@@ -316,11 +343,12 @@ function getDisplayItems(order: Order | null, snapshots: Record<string, OrderSna
 
   return snapshotItems.map((item, index) => ({
     id: `${order.id}-${index}`,
+    product_id: item.product_id,
     quantity: item.quantity,
     price: item.price,
     product_name: item.name,
     product_brand: item.brand,
-    product_image: item.image,
+    product_image: item.image || (item.product_id ? productImagesById[item.product_id] : undefined),
     product_size: item.size,
     product_color: item.color,
   }));
@@ -352,6 +380,8 @@ export default function OrderDetailsPage() {
   const [orderAddressSnapshots, setOrderAddressSnapshots] = useState<Record<string, DeliveryAddress>>({});
   const [fallbackAddress, setFallbackAddress] = useState<DeliveryAddress | null>(null);
   const [snapshots, setSnapshots] = useState<Record<string, OrderSnapshotItem[]>>({});
+  const [productImagesById, setProductImagesById] = useState<ProductImageLookup>({});
+  const [productImagesLoaded, setProductImagesLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -367,7 +397,7 @@ export default function OrderDetailsPage() {
   const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
   const [now, setNow] = useState(() => Date.now());
 
-  const displayItems = useMemo(() => getDisplayItems(order, snapshots), [order, snapshots]);
+  const displayItems = useMemo(() => getDisplayItems(order, snapshots, productImagesById), [order, snapshots, productImagesById]);
   const steps = order ? getTrackingSteps(order, now) : [];
   const returnSteps = returnRequest ? getReturnSteps(returnRequest, now) : [];
   const priceDetails = order ? getPriceDetails(order, displayItems) : null;
@@ -384,6 +414,20 @@ export default function OrderDetailsPage() {
     const timer = window.setInterval(() => setNow(Date.now()), 60 * 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (productImagesLoaded) return;
+
+    loadProductImageLookup()
+      .then((lookup) => {
+        setProductImagesById(lookup);
+        setProductImagesLoaded(true);
+      })
+      .catch(() => {
+        setProductImagesById({});
+        setProductImagesLoaded(true);
+      });
+  }, [productImagesLoaded]);
 
   useEffect(() => {
     const storedUser = getUser();

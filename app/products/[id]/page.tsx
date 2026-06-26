@@ -27,7 +27,7 @@ import { apiFetch } from '@/lib/api';
 import { getProductById } from '@/lib/products';
 import { addToCart, getCartItemKey, removeCartItem, updateCartQuantity } from '@/lib/cart';
 import { saveDeliveryLocation } from '@/lib/deliveryLocation';
-import { getWishlistEventName, isInWishlist, toggleWishlist } from '@/lib/wishlist';
+import { getWishlistEventName, isInWishlist, refreshWishlist, toggleWishlist } from '@/lib/wishlist';
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>;
@@ -295,8 +295,42 @@ export default function ProductDetailPage({
   const { id } = React.use(params);
   const query = React.use(searchParams || Promise.resolve({}));
   const fallbackProduct = getProductById(id);
+  const [apiProduct, setApiProduct] = useState<DetailProduct | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    apiFetch(`/api/products/${encodeURIComponent(id)}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((product) => {
+        if (cancelled || !product) return;
+
+        setApiProduct({
+          id: String(product.id),
+          brand: product.brand || 'Shopore',
+          name: product.name || product.description || 'Product',
+          description: product.description || product.name || 'Product',
+          image: product.image || product.images?.[0] || '',
+          price: Number(product.price || 0),
+          originalPrice: product.originalPrice == null ? undefined : Number(product.originalPrice),
+          category: product.category,
+          subCategory: product.subCategory,
+          size: product.variants?.[0]?.size,
+          color: product.variants?.[0]?.color,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setApiProduct(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   const product = useMemo<DetailProduct | null>(() => {
+    if (apiProduct) return apiProduct;
+
     const queryName = getParam(query, 'name');
     const queryImage = getParam(query, 'image');
 
@@ -330,7 +364,7 @@ export default function ProductDetailPage({
       category: fallbackProduct.category,
       image: fallbackProduct.image,
     };
-  }, [fallbackProduct, id, query]);
+  }, [apiProduct, fallbackProduct, id, query]);
 
   const [selectedSize, setSelectedSize] = useState('');
   const [showMore, setShowMore] = useState(false);
@@ -351,6 +385,7 @@ export default function ProductDetailPage({
 
     const syncWishlistState = () => setIsWishlisted(isInWishlist(wishlistId));
     syncWishlistState();
+    refreshWishlist().then(syncWishlistState).catch(() => syncWishlistState());
     window.addEventListener(getWishlistEventName(), syncWishlistState);
     window.addEventListener('storage', syncWishlistState);
 
@@ -548,10 +583,15 @@ export default function ProductDetailPage({
               <button
                 type="button"
                 aria-label="Wishlist product"
-                onClick={() => {
-                  const added = toggleWishlist(wishlistProduct);
-                  setIsWishlisted(added);
-                  toast.success(added ? 'Added to your Wishlist' : 'Removed from Wishlist');
+                onClick={async () => {
+                  try {
+                    const added = await toggleWishlist(wishlistProduct);
+                    setIsWishlisted(added);
+                    toast.success(added ? 'Added to your Wishlist' : 'Removed from Wishlist');
+                  } catch (error) {
+                    setIsWishlisted(false);
+                    toast.error(error instanceof Error ? error.message : 'Could not update wishlist');
+                  }
                 }}
                 className="transition hover:text-pink-500"
               >

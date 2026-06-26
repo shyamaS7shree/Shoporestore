@@ -51,11 +51,21 @@ type RazorpayResponse = {
   razorpay_signature: string;
 };
 
+type GooglePaymentData = {
+  paymentMethodData?: {
+    tokenizationData?: {
+      token?: string;
+    };
+  };
+};
+
 type CheckoutStep = 'bag' | 'address' | 'payment';
 type PaymentMethod = 'gpay' | 'card' | 'cod';
 const CONTINUE_SHOPPING_HREF = '/genz/fashion';
 const ORDER_SNAPSHOT_KEY = 'shopore-order-snapshots';
 const ORDER_ADDRESS_SNAPSHOT_KEY = 'shopore-order-addresses';
+const GOOGLE_PAY_SCRIPT_ID = 'google-pay-js';
+const GOOGLE_PAY_SCRIPT_SRC = 'https://pay.google.com/gp/p/js/pay.js';
 const PAYMENT_METHODS: {
   id: PaymentMethod;
   title: string;
@@ -66,7 +76,7 @@ const PAYMENT_METHODS: {
   {
     id: 'gpay',
     title: 'Google Pay',
-    subtitle: 'Pay securely using the payment gateway.',
+    subtitle: 'Pay directly with Google Pay / UPI.',
     icon: '/google-pay.png',
     iconAlt: 'Google Pay',
   },
@@ -89,8 +99,19 @@ const PAYMENT_METHODS: {
 declare global {
   interface Window {
     Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+    google?: {
+      payments?: {
+        api?: {
+          PaymentsClient: new (options: Record<string, unknown>) => {
+            loadPaymentData: (request: Record<string, unknown>) => Promise<GooglePaymentData>;
+          };
+        };
+      };
+    };
   }
 }
+
+let googlePayScriptLoadPromise: Promise<void> | null = null;
 
 function formatPrice(value: number) {
   return `\u20b9${value.toLocaleString('en-IN')}.00`;
@@ -121,6 +142,79 @@ function saveOrderCheckoutSnapshot(orderId: string, items: unknown[], address: S
   const addressSnapshots = rawAddresses ? JSON.parse(rawAddresses) : {};
   addressSnapshots[orderId] = address;
   localStorage.setItem(ORDER_ADDRESS_SNAPSHOT_KEY, JSON.stringify(addressSnapshots));
+}
+
+function loadGooglePayScript() {
+  if (window.google?.payments?.api?.PaymentsClient) {
+    return Promise.resolve();
+  }
+
+  if (googlePayScriptLoadPromise) {
+    return googlePayScriptLoadPromise;
+  }
+
+  googlePayScriptLoadPromise = new Promise((resolve, reject) => {
+    const existingScript = document.getElementById(GOOGLE_PAY_SCRIPT_ID) as HTMLScriptElement | null;
+    const script = existingScript || document.createElement('script');
+
+    script.id = GOOGLE_PAY_SCRIPT_ID;
+    script.src = GOOGLE_PAY_SCRIPT_SRC;
+    script.async = true;
+
+    script.onload = () => resolve();
+    script.onerror = () => {
+      googlePayScriptLoadPromise = null;
+      reject(new Error('Google Pay script failed to load. Check your internet connection and try again.'));
+    };
+
+    if (!existingScript) {
+      document.head.appendChild(script);
+    }
+  });
+
+  return googlePayScriptLoadPromise;
+}
+
+async function loadGooglePayTestPayment(amount: number) {
+  await loadGooglePayScript();
+
+  if (!window.google?.payments?.api?.PaymentsClient) {
+    throw new Error('Google Pay is not available in this browser. Please try Chrome or Edge.');
+  }
+
+  const paymentsClient = new window.google.payments.api.PaymentsClient({
+    environment: 'TEST',
+  });
+
+  return paymentsClient.loadPaymentData({
+    apiVersion: 2,
+    apiVersionMinor: 0,
+    allowedPaymentMethods: [
+      {
+        type: 'CARD',
+        parameters: {
+          allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+          allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA'],
+        },
+        tokenizationSpecification: {
+          type: 'PAYMENT_GATEWAY',
+          parameters: {
+            gateway: 'example',
+            gatewayMerchantId: 'exampleGatewayMerchantId',
+          },
+        },
+      },
+    ],
+    merchantInfo: {
+      merchantName: 'SHOPORE',
+    },
+    transactionInfo: {
+      totalPriceStatus: 'FINAL',
+      totalPrice: amount.toFixed(2),
+      currencyCode: 'INR',
+      countryCode: 'IN',
+    },
+  });
 }
 
 export default function CartPage() {
@@ -207,6 +301,12 @@ export default function CartPage() {
 
     return () => window.removeEventListener(getCartEventName(), refreshCart);
   }, []);
+
+  useEffect(() => {
+    if (paymentSuccessOrderId) {
+      router.prefetch('/profile?section=orders');
+    }
+  }, [paymentSuccessOrderId, router]);
 
   useEffect(() => {
     const syncDeliveryLocation = () => {
@@ -320,7 +420,7 @@ export default function CartPage() {
     toast.success('Address saved successfully.');
   };
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (selectedPaymentMethod = paymentMethod) => {
     const user = getUser();
 
     if (!user?.id) {
@@ -333,7 +433,7 @@ export default function CartPage() {
       return;
     }
 
-    if (!paymentMethod) {
+    if (!selectedPaymentMethod) {
       toast.error('Please select a payment method before checkout.');
       return;
     }
@@ -349,7 +449,7 @@ export default function CartPage() {
       price: item.product.price,
     }));
 
-    if (paymentMethod === 'cod') {
+    if (selectedPaymentMethod === 'cod') {
       setPaymentLoading(true);
 
       try {
@@ -393,8 +493,63 @@ export default function CartPage() {
       return;
     }
 
+    if (selectedPaymentMethod === 'gpay') {
+      setPaymentLoading(true);
+
+      try {
+        const paymentData = await loadGooglePayTestPayment(total);
+        const googlePayToken = paymentData.paymentMethodData?.tokenizationData?.token || '';
+        const verifyRes = await apiFetch('/api/payment/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpay_order_id: `googlepay_test_order_${Date.now()}`,
+            razorpay_payment_id: `googlepay_test_${Date.now()}`,
+            razorpay_signature: googlePayToken || 'googlepay_test_token',
+            user_id: user.id,
+            user_email: user.email,
+            user_name: user.fullName || user.name || user.email,
+            amount: total,
+            items: paymentItems,
+            address_id: selectedAddress.id,
+          }),
+        });
+        const result = await verifyRes.json();
+
+        if (result.order) {
+          saveOrderCheckoutSnapshot(result.order.id, paymentItems, selectedAddress);
+          writeCart([]);
+          setCartItems([]);
+          addNotification({
+            userId: user.id,
+            type: 'order',
+            title: 'Google Pay test successful',
+            message: `Order ${String(result.order.id).slice(0, 8).toUpperCase()} is confirmed from Google Pay test mode.`,
+            href: `/profile/orders/${result.order.id}`,
+          });
+          setPaymentSuccessOrderId(result.order.id);
+          return;
+        }
+
+        toast.error(result.error || 'Google Pay test payment failed.');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Google Pay test payment was cancelled.';
+        toast.error(message);
+      } finally {
+        setPaymentLoading(false);
+      }
+
+      return;
+    }
+
     if (!window.Razorpay) {
       toast.error('Payment gateway is still loading. Please try again.');
+      return;
+    }
+
+    const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    if (!razorpayKey) {
+      toast.error('Razorpay test key missing. Add NEXT_PUBLIC_RAZORPAY_KEY_ID in .env.local and restart Next.js.');
       return;
     }
 
@@ -415,21 +570,28 @@ export default function CartPage() {
       }
 
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: razorpayKey,
         amount: order.amount,
         currency: 'INR',
         name: 'SHOPORE',
         image: `${window.location.origin}/icon.png`,
-        description: 'Order Payment',
-        order_id: order.id,
+        description: 'Credit Card Test Payment',
+        method: {
+          card: true,
+          upi: false,
+          netbanking: false,
+          wallet: false,
+          emi: false,
+          paylater: false,
+        },
         handler: async (response: RazorpayResponse) => {
           const verifyRes = await apiFetch('/api/payment/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
+              razorpay_order_id: response.razorpay_order_id || '',
               razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
+              razorpay_signature: response.razorpay_signature || '',
               user_id: user.id,
               user_email: user.email,
               user_name: user.fullName || user.name || user.email,
@@ -482,6 +644,14 @@ export default function CartPage() {
     }
   };
 
+  const handlePaymentMethodSelect = (method: PaymentMethod) => {
+    setPaymentMethod(method);
+
+    if (method === 'card' || method === 'gpay') {
+      handlePlaceOrder(method);
+    }
+  };
+
   const continueCheckout = () => {
     if (!paymentMethod) {
       toast.error('Please select a payment method before checkout.');
@@ -493,7 +663,7 @@ export default function CartPage() {
       return;
     }
 
-    handlePlaceOrder();
+    handlePlaceOrder(paymentMethod);
   };
 
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -512,13 +682,15 @@ export default function CartPage() {
     ? `${selectedAddress.address_line}, ${selectedAddress.city}, ${selectedAddress.state} - ${selectedAddress.pin_code}`
     : '';
   const deliverySummaryText = selectedAddressText || checkedLocationText || 'Please select a delivery address.';
-  const showCartAddressButton = !selectedAddress || addresses.length > 1;
+  const showCartAddressButton = true;
   const cartAddressButtonLabel = selectedAddress ? 'Change Address' : 'Add Address';
   const actionLabel =
     paymentLoading
       ? paymentMethod === 'cod'
         ? 'Placing Order...'
-        : 'Opening Payment...'
+        : paymentMethod === 'gpay'
+          ? 'Opening Google Pay...'
+          : 'Opening Payment...'
       : 'Check Out';
 
   return (
@@ -781,7 +953,7 @@ export default function CartPage() {
                         <button
                           key={method.id}
                           type="button"
-                          onClick={() => setPaymentMethod(method.id)}
+                          onClick={() => handlePaymentMethodSelect(method.id)}
                           className={`mt-3 flex w-full items-center justify-between border bg-white p-4 text-left ${active ? 'border-[#071225]' : 'border-slate-200'}`}
                         >
                           <span className="flex items-center gap-3">
@@ -847,7 +1019,7 @@ export default function CartPage() {
                         type="radio"
                         name="payment"
                         checked={paymentMethod === method.id}
-                        onChange={() => setPaymentMethod(method.id)}
+                        onChange={() => handlePaymentMethodSelect(method.id)}
                         className="h-4 w-4 accent-[#1f1b1f]"
                       />
                       <Image
@@ -1092,13 +1264,14 @@ export default function CartPage() {
             <p className="mt-2 text-[14px] leading-6 text-slate-600">
               Your order has been placed successfully. You can track it from My Orders.
             </p>
-            <button
-              type="button"
-              onClick={() => router.push('/profile?section=orders')}
-              className="mt-6 h-11 w-full rounded-md bg-[#071225] text-[14px] font-semibold text-white"
+            <Link
+              href="/profile?section=orders"
+              prefetch
+              onClick={() => setPaymentSuccessOrderId(null)}
+              className="mt-6 flex h-11 w-full items-center justify-center rounded-md bg-[#071225] text-[14px] font-semibold text-white"
             >
               View My Orders
-            </button>
+            </Link>
           </div>
         </div>
       )}

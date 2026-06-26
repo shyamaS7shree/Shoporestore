@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "seed:products": "node scripts/seed-public-products.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."

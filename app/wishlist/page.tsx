@@ -8,6 +8,7 @@ import { addToCart } from '@/lib/cart';
 import {
   getWishlistEventName,
   readWishlist,
+  refreshWishlist,
   removeFromWishlist,
   WishlistProduct,
 } from '@/lib/wishlist';
@@ -28,6 +29,7 @@ export default function WishlistPage() {
   useEffect(() => {
     const syncWishlist = () => setItems(readWishlist());
     syncWishlist();
+    refreshWishlist().then(setItems).catch(syncWishlist);
     window.addEventListener(getWishlistEventName(), syncWishlist);
     window.addEventListener('storage', syncWishlist);
 
@@ -37,12 +39,12 @@ export default function WishlistPage() {
     };
   }, []);
 
-  const removeItem = (id: string) => {
-    setItems(removeFromWishlist(id));
+  const removeItem = async (id: string) => {
+    setItems(await removeFromWishlist(id));
     toast.success('Removed from Wishlist');
   };
 
-  const moveToBag = (item: WishlistProduct) => {
+  const moveToBag = async (item: WishlistProduct) => {
     addToCart({
       id: item.id,
       brand: item.brand,
@@ -54,7 +56,7 @@ export default function WishlistPage() {
       size: item.size,
       href: item.href,
     });
-    setItems(removeFromWishlist(item.id));
+    setItems(await removeFromWishlist(item.id));
     toast.success('Moved to bag');
   };
 

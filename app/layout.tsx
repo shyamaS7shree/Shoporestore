@@ -51,6 +51,10 @@ export default function RootLayout({
           src="https://checkout.razorpay.com/v1/checkout.js"
           strategy="beforeInteractive"
         />
+        <Script
+          src="https://pay.google.com/gp/p/js/pay.js"
+          strategy="beforeInteractive"
+        />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
