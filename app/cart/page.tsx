@@ -13,6 +13,7 @@ import {
   Ticket,
   Trash2,
   MapPin,
+  Pencil,
   X,
 } from 'lucide-react';
 import {
@@ -33,6 +34,7 @@ import {
   saveDeliveryLocation,
 } from '@/lib/deliveryLocation';
 import { addNotification } from '@/lib/notifications';
+import { getProductSizeOptions } from '@/lib/productSizing';
 
 type SavedAddress = {
   id: string;
@@ -144,6 +146,24 @@ function saveOrderCheckoutSnapshot(orderId: string, items: unknown[], address: S
   localStorage.setItem(ORDER_ADDRESS_SNAPSHOT_KEY, JSON.stringify(addressSnapshots));
 }
 
+function saveCreatedOrderSnapshots(
+  result: { order?: { id: string }; orders?: Array<{ id: string }> },
+  items: unknown[],
+  address: SavedAddress,
+) {
+  const orders = Array.isArray(result.orders) && result.orders.length
+    ? result.orders
+    : result.order
+      ? [result.order]
+      : [];
+
+  orders.forEach((order, index) => {
+    saveOrderCheckoutSnapshot(order.id, items[index] ? [items[index]] : items, address);
+  });
+
+  return orders;
+}
+
 function loadGooglePayScript() {
   if (window.google?.payments?.api?.PaymentsClient) {
     return Promise.resolve();
@@ -227,6 +247,8 @@ export default function CartPage() {
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<SavedAddress | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [pendingDeleteKey, setPendingDeleteKey] = useState<string | null>(null);
@@ -269,6 +291,10 @@ export default function CartPage() {
         if (openModal) {
           setShowAddressForm(showForm || data.length === 0);
         }
+      }
+    } catch {
+      if (openModal) {
+        toast.error('Could not connect to the address service. Please try again.');
       }
     } finally {
       if (openModal) {
@@ -392,32 +418,82 @@ export default function CartPage() {
       return;
     }
 
-    const res = await apiFetch('/api/addresses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...addressForm, user_id: user.id }),
-    });
-    const data = await res.json();
+    try {
+      const res = await apiFetch(editingAddressId ? `/api/addresses/${editingAddressId}` : '/api/addresses', {
+        method: editingAddressId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...addressForm, user_id: user.id }),
+      });
+      const data = await res.json();
 
-    if (!res.ok) {
-      toast.error(data.error || 'Address save failed.');
-      return;
+      if (!res.ok) {
+        toast.error(data.error || 'Address save failed.');
+        return;
+      }
+
+      setAddresses((prev) =>
+        editingAddressId
+          ? prev.map((address) => (address.id === editingAddressId ? data : address))
+          : [data, ...prev]
+      );
+      setSelectedAddress(data);
+      setEditingAddressId(null);
+      setShowAddressForm(false);
+      setAddressModalOpen(false);
+      setCheckoutStep('bag');
+      setAddressForm({
+        full_name: '',
+        phone: '',
+        pin_code: '',
+        address_line: '',
+        city: '',
+        state: '',
+      });
+      toast.success(editingAddressId ? 'Address updated successfully.' : 'Address saved successfully.');
+    } catch {
+      toast.error('Could not connect to the address service. Please try again.');
     }
+  };
 
-    setAddresses((prev) => [data, ...prev]);
-    setSelectedAddress(data);
-    setShowAddressForm(false);
-    setAddressModalOpen(false);
-    setCheckoutStep('bag');
+  const editAddress = (address: SavedAddress) => {
+    setEditingAddressId(address.id);
     setAddressForm({
-      full_name: '',
-      phone: '',
-      pin_code: '',
-      address_line: '',
-      city: '',
-      state: '',
+      full_name: address.full_name,
+      phone: address.phone,
+      pin_code: address.pin_code,
+      address_line: address.address_line,
+      city: address.city,
+      state: address.state,
     });
-    toast.success('Address saved successfully.');
+    setModalPinCode(address.pin_code);
+    setShowAddressForm(true);
+  };
+
+  const deleteAddress = async (address: SavedAddress) => {
+    const user = getUser();
+    if (!user?.id || deletingAddressId) return;
+    if (!window.confirm(`Delete the address for ${address.full_name}?`)) return;
+
+    setDeletingAddressId(address.id);
+    try {
+      const response = await apiFetch(`/api/addresses/${address.id}?user_id=${encodeURIComponent(user.id)}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Address deletion failed.');
+
+      setAddresses((previous) => previous.filter((item) => item.id !== address.id));
+      if (selectedAddress?.id === address.id) setSelectedAddress(null);
+      if (editingAddressId === address.id) {
+        setEditingAddressId(null);
+        setShowAddressForm(false);
+      }
+      toast.success('Address deleted successfully.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not delete address.');
+    } finally {
+      setDeletingAddressId(null);
+    }
   };
 
   const handlePlaceOrder = async (selectedPaymentMethod = paymentMethod) => {
@@ -425,6 +501,16 @@ export default function CartPage() {
 
     if (!user?.id) {
       openLoginModal();
+      return;
+    }
+
+    const itemWithInvalidSize = cartItems.find((item) => {
+      const options = getProductSizeOptions(item.product);
+      return options.length > 0 && !options.includes(item.product.size || '');
+    });
+    if (itemWithInvalidSize) {
+      setCheckoutStep('bag');
+      toast.error(`Please select a valid size for ${itemWithInvalidSize.product.name}.`);
       return;
     }
 
@@ -473,17 +559,19 @@ export default function CartPage() {
           return;
         }
 
-        saveOrderCheckoutSnapshot(result.order.id, paymentItems, selectedAddress);
+        const createdOrders = saveCreatedOrderSnapshots(result, paymentItems, selectedAddress);
+        const firstOrder = createdOrders[0];
+        if (!firstOrder) throw new Error('The order response was incomplete.');
         writeCart([]);
         setCartItems([]);
         addNotification({
           userId: user.id,
           type: 'order',
-          title: 'COD order placed',
-          message: `Order ${String(result.order.id).slice(0, 8).toUpperCase()} was placed successfully. Track it from My Orders.`,
-          href: `/profile/orders/${result.order.id}`,
+          title: createdOrders.length > 1 ? `${createdOrders.length} COD orders placed` : 'COD order placed',
+          message: `${createdOrders.length} ${createdOrders.length === 1 ? 'order was' : 'orders were'} placed successfully. Track them from My Orders.`,
+          href: '/profile?section=orders',
         });
-        setPaymentSuccessOrderId(result.order.id);
+        setPaymentSuccessOrderId(firstOrder.id);
       } catch {
         toast.error('Order creation failed. Please try again.');
       } finally {
@@ -517,17 +605,19 @@ export default function CartPage() {
         const result = await verifyRes.json();
 
         if (result.order) {
-          saveOrderCheckoutSnapshot(result.order.id, paymentItems, selectedAddress);
+          const createdOrders = saveCreatedOrderSnapshots(result, paymentItems, selectedAddress);
+          const firstOrder = createdOrders[0];
+          if (!firstOrder) throw new Error('The order response was incomplete.');
           writeCart([]);
           setCartItems([]);
           addNotification({
             userId: user.id,
             type: 'order',
             title: 'Google Pay test successful',
-            message: `Order ${String(result.order.id).slice(0, 8).toUpperCase()} is confirmed from Google Pay test mode.`,
-            href: `/profile/orders/${result.order.id}`,
+            message: `${createdOrders.length} ${createdOrders.length === 1 ? 'order is' : 'orders are'} confirmed from Google Pay test mode.`,
+            href: '/profile?section=orders',
           });
-          setPaymentSuccessOrderId(result.order.id);
+          setPaymentSuccessOrderId(firstOrder.id);
           return;
         }
 
@@ -603,7 +693,13 @@ export default function CartPage() {
           const result = await verifyRes.json();
 
           if (result.order) {
-            saveOrderCheckoutSnapshot(result.order.id, paymentItems, selectedAddress);
+            const createdOrders = saveCreatedOrderSnapshots(result, paymentItems, selectedAddress);
+            const firstOrder = createdOrders[0];
+            if (!firstOrder) {
+              setPaymentLoading(false);
+              toast.error('The order response was incomplete.');
+              return;
+            }
             writeCart([]);
             setCartItems([]);
             setPaymentLoading(false);
@@ -611,10 +707,10 @@ export default function CartPage() {
               userId: user.id,
               type: 'order',
               title: 'Payment successful',
-              message: `Order ${String(result.order.id).slice(0, 8).toUpperCase()} is confirmed. Track it from My Orders.`,
-              href: `/profile/orders/${result.order.id}`,
+              message: `${createdOrders.length} ${createdOrders.length === 1 ? 'order is' : 'orders are'} confirmed. Track them from My Orders.`,
+              href: '/profile?section=orders',
             });
-            setPaymentSuccessOrderId(result.order.id);
+            setPaymentSuccessOrderId(firstOrder.id);
             return;
           }
 
@@ -646,10 +742,6 @@ export default function CartPage() {
 
   const handlePaymentMethodSelect = (method: PaymentMethod) => {
     setPaymentMethod(method);
-
-    if (method === 'card' || method === 'gpay') {
-      handlePlaceOrder(method);
-    }
   };
 
   const continueCheckout = () => {
@@ -822,18 +914,23 @@ export default function CartPage() {
                             </div>
                           </Link>
 
-                          <select
-                            value={item.product.size || 'M'}
-                            onChange={(event) => updateItemSize(item.key, event.target.value)}
-                            className="h-10 w-24 rounded-lg border-0 bg-slate-100 px-3 text-[13px] outline-none"
-                            aria-label={`Size for ${item.product.name}`}
-                          >
-                            {['XS', 'S', 'M', 'L', 'XL', '2XL'].map((size) => (
-                              <option key={size} value={size}>
-                                {size}
-                              </option>
-                            ))}
-                          </select>
+                          {getProductSizeOptions(item.product).length > 0 ? (
+                            <select
+                              value={getProductSizeOptions(item.product).includes(item.product.size || '') ? item.product.size : ''}
+                              onChange={(event) => updateItemSize(item.key, event.target.value)}
+                              className="h-10 w-24 rounded-lg border-0 bg-slate-100 px-3 text-[13px] outline-none"
+                              aria-label={`Size for ${item.product.name}`}
+                            >
+                              <option value="" disabled>Size</option>
+                              {getProductSizeOptions(item.product).map((size) => (
+                                <option key={size} value={size}>
+                                  {size}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="text-[12px] font-medium text-slate-400">N/A</span>
+                          )}
 
                           <div className="flex items-center gap-2">
                             <button
@@ -1150,6 +1247,10 @@ export default function CartPage() {
               type="button"
               onClick={() => {
                 applyDeliveryLocationToForm(deliveryLocation);
+                setEditingAddressId(null);
+                if (showAddressForm) {
+                  setAddressForm({ full_name: '', phone: '', pin_code: '', address_line: '', city: '', state: '' });
+                }
                 setShowAddressForm((prev) => !prev);
               }}
               className="mt-3 flex h-12 w-full cursor-pointer items-center justify-between rounded bg-[#f5f1ec] px-4 text-left text-[15px] text-[#a04f35]"
@@ -1163,6 +1264,21 @@ export default function CartPage() {
 
             {showAddressForm && (
               <div className="mt-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[15px] font-semibold text-[#071225]">
+                    {editingAddressId ? 'Edit Address' : 'Add New Address'}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingAddressId(null);
+                      setShowAddressForm(false);
+                    }}
+                    className="text-[12px] font-semibold text-slate-500 hover:text-[#071225]"
+                  >
+                    Cancel
+                  </button>
+                </div>
                 {[
                   ['full_name', 'Full name'],
                   ['phone', 'Phone number'],
@@ -1186,7 +1302,7 @@ export default function CartPage() {
                   onClick={saveAddress}
                   className="h-11 w-full bg-[#071225] text-[14px] font-semibold text-white"
                 >
-                  Save Address
+                  {editingAddressId ? 'Update Address' : 'Save Address'}
                 </button>
               </div>
             )}
@@ -1194,24 +1310,49 @@ export default function CartPage() {
             {!addressLoading && addresses.length > 0 ? (
               <div className="mt-5 space-y-3">
                 {addresses.map((address) => (
-                  <button
+                  <div
                     key={address.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedAddress(address);
-                      setDeliveryLocation(null);
-                      setCheckoutStep('bag');
-                      setAddressModalOpen(false);
-                    }}
-                    className={`w-full border p-4 text-left text-[14px] ${selectedAddress?.id === address.id ? 'border-[#071225]' : 'border-slate-200'
+                    className={`w-full border p-4 text-[14px] ${selectedAddress?.id === address.id ? 'border-[#071225] bg-slate-50' : 'border-slate-200'
                       }`}
                   >
-                    <p className="font-semibold text-[#071225]">{address.full_name}</p>
-                    <p className="mt-1 text-slate-600">{address.phone}</p>
-                    <p className="mt-2 text-slate-600">
-                      {address.address_line}, {address.city}, {address.state} - {address.pin_code}
-                    </p>
-                  </button>
+                    <div className="flex items-start justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedAddress(address);
+                          setDeliveryLocation(null);
+                          setCheckoutStep('bag');
+                          setAddressModalOpen(false);
+                        }}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <p className="font-semibold text-[#071225]">{address.full_name || 'Saved Address'}</p>
+                        <p className="mt-1 text-slate-600">{address.phone}</p>
+                        <p className="mt-2 leading-5 text-slate-600">
+                          {[address.address_line, address.city, address.state, address.pin_code].filter(Boolean).join(', ')}
+                        </p>
+                      </button>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => editAddress(address)}
+                          className="rounded p-2 text-blue-700 transition hover:bg-blue-50"
+                          aria-label={`Edit address for ${address.full_name}`}
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteAddress(address)}
+                          disabled={deletingAddressId === address.id}
+                          className="rounded p-2 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                          aria-label={`Delete address for ${address.full_name}`}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : !addressLoading ? (
