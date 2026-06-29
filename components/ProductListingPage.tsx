@@ -32,6 +32,9 @@ export interface Product {
   size?: string;
   color?: string;
   fit?: string;
+  rating?: number;
+  reviews?: number;
+  sizeOptions?: string[];
 }
 
 export interface FilterSection {
@@ -399,6 +402,22 @@ function ProductCard({
         <p className="mt-1 truncate text-[11px] text-gray-500 md:text-[12px]">
           {product.name || product.description}
         </p>
+        <div className="mt-2 flex items-center gap-2">
+          {Number(product.reviews || 0) > 0 ? (
+            <>
+              <span className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white md:text-[11px]">
+                {Number(product.rating || 0).toFixed(1)} <span aria-hidden="true">★</span>
+              </span>
+              <span className="text-[10px] text-gray-400 md:text-[11px]">
+                {product.reviews} {product.reviews === 1 ? 'review' : 'reviews'}
+              </span>
+            </>
+          ) : (
+            <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 md:text-[11px]">
+              New
+            </span>
+          )}
+        </div>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className="text-[13px] font-bold text-gray-950 md:text-[14px]">
             ₹{product.price.toLocaleString('en-IN')}
@@ -491,11 +510,22 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
 
   useEffect(() => {
     let cancelled = false;
-    const department = getDepartmentFromTitle(config.title);
+    const imagePaths = config.products.map((product) => product.image).filter(Boolean) as string[];
 
     setApiLoaded(false);
 
-    apiFetch(`/api/products?category=${encodeURIComponent(department)}`)
+    if (imagePaths.length === 0) {
+      setApiProducts([]);
+      setApiAvailable(false);
+      setApiLoaded(true);
+      return;
+    }
+
+    apiFetch('/api/products/by-images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images: imagePaths }),
+    })
       .then((response) => {
         if (!response.ok) throw new Error('Products API failed');
         return response.json();
@@ -515,6 +545,9 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
           subCategory: product.subCategory,
           size: product.variants?.[0]?.size,
           color: product.variants?.[0]?.color,
+          rating: Number(product.rating || 0),
+          reviews: Number(product.reviews || 0),
+          sizeOptions: Array.isArray(product.sizeOptions) ? product.sizeOptions : undefined,
         })).filter((product: Product) => Number.isFinite(product.id) && product.id > 0);
 
         const sectionProductsByImage = new Map(
@@ -543,7 +576,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
           .filter(Boolean) as Product[];
 
         setApiProducts(matchingProducts);
-        setApiAvailable(true);
+        setApiAvailable(matchingProducts.length > 0);
         setApiLoaded(true);
       })
       .catch(() => {
@@ -696,7 +729,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
           />
         )}
 
-        <CompactAvailabilityFilter productCount={products.length} />
+        <CompactAvailabilityFilter productCount={apiLoaded ? products.length : config.totalProducts} />
 
         {[...visibleFilters, ...extraRows].map((filter) => (
           <CompactFilterRow
@@ -736,7 +769,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
                   {config.title}
                 </h1>
                 <p className="mt-0.5 text-[13px] text-gray-500">
-                  {products.length.toLocaleString()} Products
+                  {apiLoaded ? `${products.length.toLocaleString()} Products` : 'Loading products...'}
                 </p>
               </div>
 
@@ -811,7 +844,28 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
             </div>
 
             {/* Product grid or No Results */}
-            {products.length === 0 ? (
+            {!apiLoaded ? (
+              <div aria-label="Loading products" aria-busy="true">
+                <div className="mb-5 flex items-center gap-2 text-[13px] font-medium text-slate-500">
+                  <span className="h-2.5 w-2.5 animate-pulse rounded-full" style={{ backgroundColor: config.accentColor }} />
+                  Finding the best products for you...
+                </div>
+                <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                  {Array.from({ length: 10 }).map((_, index) => (
+                    <div key={index} className="animate-pulse">
+                      <div className="aspect-[3/4] w-full rounded-xl bg-slate-200" />
+                      <div className="mt-3 h-3 w-2/5 rounded bg-slate-200" />
+                      <div className="mt-2 h-3 w-4/5 rounded bg-slate-100" />
+                      <div className="mt-3 flex gap-2">
+                        <div className="h-5 w-12 rounded bg-slate-200" />
+                        <div className="h-5 w-16 rounded bg-slate-100" />
+                      </div>
+                      <div className="mt-3 h-4 w-3/5 rounded bg-slate-200" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : products.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <PackageSearch size={48} className="mb-4 text-gray-300" />
                 <h3 className="text-[18px] font-bold text-gray-700">No results found</h3>
