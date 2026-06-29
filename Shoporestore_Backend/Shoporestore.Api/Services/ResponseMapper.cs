@@ -69,7 +69,6 @@ public static class ResponseMapper
         subCategory = product.SubCategory,
         description = product.Description,
         image = GetPrimaryImage(product),
-        sizeOptions = ProductSizeCatalog.Parse(product.SizeOptions),
         price = product.Price,
         originalPrice = product.OriginalPrice,
         rating = product.Rating,

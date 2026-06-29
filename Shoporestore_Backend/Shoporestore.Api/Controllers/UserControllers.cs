@@ -15,7 +15,7 @@ public class AddressesController(ShoporeDbContext db) : ControllerBase
     public async Task<IActionResult> Get([FromQuery(Name = "user_id")] int userId)
     {
         var addresses = await db.Addresses
-            .Where(x => x.UserId == userId && !x.IsDeleted)
+            .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
@@ -44,37 +44,6 @@ public class AddressesController(ShoporeDbContext db) : ControllerBase
         db.Addresses.Add(address);
         await db.SaveChangesAsync();
         return Ok(ResponseMapper.ToAddressDto(address));
-    }
-
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, AddressRequest request)
-    {
-        var address = await db.Addresses.FirstOrDefaultAsync(x => x.Id == id && x.UserId == request.UserId && !x.IsDeleted);
-        if (address is null) return NotFound(new { error = "Address not found." });
-
-        address.FullName = request.FullName.Trim();
-        address.Phone = request.Phone.Trim();
-        address.PinCode = request.PinCode.Trim();
-        address.PostalCode = request.PinCode.Trim();
-        address.AddressLine = request.AddressLine.Trim();
-        address.AddressLine1 = request.AddressLine.Trim();
-        address.City = request.City.Trim();
-        address.State = request.State.Trim();
-        await db.SaveChangesAsync();
-
-        return Ok(ResponseMapper.ToAddressDto(address));
-    }
-
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id, [FromQuery(Name = "user_id")] int userId)
-    {
-        var address = await db.Addresses.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId && !x.IsDeleted);
-        if (address is null) return NotFound(new { error = "Address not found." });
-
-        address.IsDeleted = true;
-        address.IsDefault = false;
-        await db.SaveChangesAsync();
-        return Ok(new { success = true });
     }
 }
 

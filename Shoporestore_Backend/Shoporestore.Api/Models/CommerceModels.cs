@@ -68,8 +68,6 @@ public class Review
     public int Rating { get; set; }
     [MaxLength(200)] public string? Title { get; set; }
     [MaxLength(2000)] public string? Comment { get; set; }
-    public string? ImageDataUrl { get; set; }
-    public bool IsDemo { get; set; }
     public bool IsApproved { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

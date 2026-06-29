@@ -82,9 +82,7 @@ public class ShoporeDbContext(DbContextOptions<ShoporeDbContext> options) : DbCo
 
         modelBuilder.Entity<Review>(entity =>
         {
-            entity.HasIndex(x => new { x.UserId, x.OrderItemId })
-                .IsUnique()
-                .HasFilter("[OrderItemId] IS NOT NULL");
+            entity.HasIndex(x => new { x.UserId, x.OrderItemId }).IsUnique();
         });
     }
 }

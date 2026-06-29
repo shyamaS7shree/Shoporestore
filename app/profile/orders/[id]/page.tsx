@@ -29,7 +29,6 @@ type DeliveryAddress = {
 
 type Order = {
   id: string;
-  order_number?: string;
   total: number;
   status: string;
   created_at: string;
@@ -152,10 +151,6 @@ function daysSince(value: string) {
 
 function shortOrderId(id: string) {
   return id.slice(0, 8).toUpperCase();
-}
-
-function displayOrderNumber(order: Order) {
-  return order.order_number || shortOrderId(order.id);
 }
 
 function getOrderStatusLabel(status?: string) {
@@ -632,7 +627,7 @@ export default function OrderDetailsPage() {
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 p-6">
             <div>
               <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">Order Details</p>
-              <h1 className="mt-4 text-[19px] font-normal">Order ID # {displayOrderNumber(order)}</h1>
+              <h1 className="mt-4 text-[19px] font-normal">Order ID # {shortOrderId(order.id)}</h1>
               <p className="mt-2 text-[13px] text-slate-500">Placed on {formatDateTime(order.created_at)}</p>
               {cancelledAt && (
                 <p className="mt-2 text-[12px] font-semibold text-red-600">

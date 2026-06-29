@@ -18,27 +18,6 @@ BEGIN
     ALTER TABLE [Users] ADD [Gender] nvarchar(20) NULL;
 END
 
-IF OBJECT_ID(N'[Reviews]', N'U') IS NOT NULL AND COL_LENGTH(N'[Reviews]', N'ImageDataUrl') IS NULL
-BEGIN
-    ALTER TABLE [Reviews] ADD [ImageDataUrl] nvarchar(max) NULL;
-END
-
-IF OBJECT_ID(N'[Reviews]', N'U') IS NOT NULL AND COL_LENGTH(N'[Reviews]', N'IsDemo') IS NULL
-BEGIN
-    ALTER TABLE [Reviews] ADD [IsDemo] bit NOT NULL CONSTRAINT [DF_Reviews_IsDemo] DEFAULT 0;
-END
-
-IF OBJECT_ID(N'[Reviews]', N'U') IS NOT NULL
-BEGIN
-    IF EXISTS (SELECT 1 FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID(N'[Reviews]') AND name = N'UQ_Review_User_OrderItem')
-        ALTER TABLE [Reviews] DROP CONSTRAINT [UQ_Review_User_OrderItem];
-    IF EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Reviews]') AND name = N'IX_Reviews_UserId_OrderItemId')
-        DROP INDEX [IX_Reviews_UserId_OrderItemId] ON [Reviews];
-    IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[Reviews]') AND name = N'OrderItemId' AND is_nullable = 0)
-        ALTER TABLE [Reviews] ALTER COLUMN [OrderItemId] int NULL;
-    CREATE UNIQUE INDEX [IX_Reviews_UserId_OrderItemId] ON [Reviews] ([UserId], [OrderItemId]) WHERE [OrderItemId] IS NOT NULL;
-END
-
 IF OBJECT_ID(N'[Addresses]', N'U') IS NOT NULL AND COL_LENGTH(N'[Addresses]', N'AddressLine') IS NULL
 BEGIN
     ALTER TABLE [Addresses] ADD [AddressLine] nvarchar(400) NOT NULL CONSTRAINT [DF_Addresses_AddressLine] DEFAULT N'';
@@ -47,11 +26,6 @@ END
 IF OBJECT_ID(N'[Addresses]', N'U') IS NOT NULL AND COL_LENGTH(N'[Addresses]', N'PinCode') IS NULL
 BEGIN
     ALTER TABLE [Addresses] ADD [PinCode] nvarchar(20) NOT NULL CONSTRAINT [DF_Addresses_PinCode] DEFAULT N'';
-END
-
-IF OBJECT_ID(N'[Addresses]', N'U') IS NOT NULL AND COL_LENGTH(N'[Addresses]', N'IsDeleted') IS NULL
-BEGIN
-    ALTER TABLE [Addresses] ADD [IsDeleted] bit NOT NULL CONSTRAINT [DF_Addresses_IsDeleted] DEFAULT 0;
 END
 
 IF OBJECT_ID(N'[Addresses]', N'U') IS NOT NULL AND COL_LENGTH(N'[Addresses]', N'CreatedAt') IS NULL
@@ -165,11 +139,6 @@ END
 IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL AND COL_LENGTH(N'[Products]', N'Image') IS NULL
 BEGIN
     ALTER TABLE [Products] ADD [Image] nvarchar(1000) NULL;
-END
-
-IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL AND COL_LENGTH(N'[Products]', N'SizeOptions') IS NULL
-BEGIN
-    ALTER TABLE [Products] ADD [SizeOptions] nvarchar(250) NULL;
 END
 
 IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL AND COL_LENGTH(N'[Products]', N'Price') IS NULL

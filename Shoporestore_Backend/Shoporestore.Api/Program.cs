@@ -59,9 +59,6 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ShoporeDbContext>();
     db.Database.EnsureCreated();
     await DatabaseSchemaService.EnsureCompatibleAsync(db);
-    await OrderNumberService.NormalizeExistingAsync(db);
-    await ProductSizeCatalog.SeedAsync(db);
-    await DemoReviewSeeder.SeedAsync(db);
 }
 
 app.Run();

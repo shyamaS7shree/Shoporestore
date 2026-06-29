@@ -8,11 +8,6 @@ export type CartProduct = {
   color?: string;
   size?: string;
   href?: string;
-  department?: string;
-  category?: string;
-  subCategory?: string;
-  description?: string;
-  sizeOptions?: string[];
 };
 
 export type CartItem = {

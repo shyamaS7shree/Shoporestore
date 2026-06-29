@@ -18,36 +18,11 @@ public class ProductsController(ShoporeDbContext db) : ControllerBase
             .Include(x => x.Variants)
             .Include(x => x.Images)
             .Where(x => x.IsActive)
-            .AsSplitQuery()
-            .AsNoTracking()
             .AsQueryable();
         if (!string.IsNullOrWhiteSpace(category)) query = query.Where(x => x.Category == category || x.SubCategory == category);
         if (!string.IsNullOrWhiteSpace(search)) query = query.Where(x => x.Name.Contains(search) || x.Brand.Contains(search));
 
         var products = await query.OrderByDescending(x => x.CreatedAt).ToListAsync();
-        return Ok(products.Select(ResponseMapper.ToProductDto).ToList());
-    }
-
-    [HttpPost("by-images")]
-    public async Task<IActionResult> GetByImages(ProductImagesRequest request)
-    {
-        var images = request.Images
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Take(100)
-            .ToList();
-        if (images.Count == 0) return Ok(Array.Empty<object>());
-
-        var products = await db.Products
-            .Include(x => x.Variants)
-            .Include(x => x.Images)
-            .Where(x => x.IsActive &&
-                ((x.Image != null && images.Contains(x.Image)) || x.Images.Any(image => images.Contains(image.ImageUrl))))
-            .AsSplitQuery()
-            .AsNoTracking()
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync();
-
         return Ok(products.Select(ResponseMapper.ToProductDto).ToList());
     }
 
@@ -57,8 +32,6 @@ public class ProductsController(ShoporeDbContext db) : ControllerBase
         var product = await db.Products
             .Include(x => x.Variants)
             .Include(x => x.Images)
-            .AsSplitQuery()
-            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id);
         return product is null ? NotFound(new { error = "Product not found." }) : Ok(ResponseMapper.ToProductDto(product));
     }
@@ -78,7 +51,6 @@ public class ProductsController(ShoporeDbContext db) : ControllerBase
             Price = request.Price,
             OriginalPrice = request.OriginalPrice
         };
-        product.SizeOptions = string.Join(',', ProductSizeCatalog.GetOptions(product));
 
         product.Variants.Add(new ProductVariant
         {
@@ -115,7 +87,6 @@ public class ProductsController(ShoporeDbContext db) : ControllerBase
         product.Price = request.Price;
         product.OriginalPrice = request.OriginalPrice;
         product.UpdatedAt = DateTime.UtcNow;
-        product.SizeOptions = string.Join(',', ProductSizeCatalog.GetOptions(product));
         ReplaceProductImages(product, request);
 
         var variant = product.Variants.FirstOrDefault();

@@ -69,11 +69,6 @@ public class CancelOrderRequest
     [JsonPropertyName("cancellation_reason")] public string? CancellationReason { get; set; }
 }
 
-public class SplitOrderRequest
-{
-    [JsonPropertyName("user_id")] public int UserId { get; set; }
-}
-
 public record CreatePaymentOrderRequest(decimal Amount);
 
 public class VerifyPaymentRequest : CreateOrderRequest
@@ -97,11 +92,6 @@ public class ProductRequest
     [JsonPropertyName("images")] public List<string> Images { get; set; } = [];
 }
 
-public class ProductImagesRequest
-{
-    [JsonPropertyName("images")] public List<string> Images { get; set; } = [];
-}
-
 public class WishlistItemRequest
 {
     [JsonPropertyName("user_id")] public int UserId { get; set; }
@@ -116,7 +106,6 @@ public class ReviewRequest
     [JsonPropertyName("rating")] public int Rating { get; set; }
     [JsonPropertyName("title")] public string? Title { get; set; }
     [JsonPropertyName("comment")] public string? Comment { get; set; }
-    [JsonPropertyName("image_data_url")] public string? ImageDataUrl { get; set; }
 }
 
 public class StockAdjustRequest

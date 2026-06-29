@@ -54,9 +54,6 @@ export default function WishlistPage() {
       originalPrice: item.originalPrice,
       color: item.color,
       size: item.size,
-      department: item.department,
-      category: item.category,
-      subCategory: item.subCategory,
       href: item.href,
     });
     setItems(await removeFromWishlist(item.id));

@@ -31,7 +31,6 @@ public class Address
     [MaxLength(100)] public string State { get; set; } = string.Empty;
     [MaxLength(100)] public string Country { get; set; } = "India";
     public bool IsDefault { get; set; }
-    public bool IsDeleted { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public User? User { get; set; }
 }
@@ -63,7 +62,6 @@ public class Product
     [MaxLength(120)] public string? SubCategory { get; set; }
     public string? Description { get; set; }
     [MaxLength(1000)] public string? Image { get; set; }
-    [MaxLength(250)] public string? SizeOptions { get; set; }
     public decimal Price { get; set; }
     public decimal? OriginalPrice { get; set; }
     public decimal Rating { get; set; }

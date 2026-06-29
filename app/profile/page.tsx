@@ -31,7 +31,6 @@ type StoredUser = {
 
 type Order = {
   id: string;
-  order_number?: string;
   total: number;
   status: string;
   created_at: string;
@@ -156,23 +155,8 @@ function addDaysDateTime(value: string, days: number) {
   return formatDateTime(date.toISOString());
 }
 
-function formatDeliveryBy(value: string) {
-  const date = parseOrderDate(value);
-  date.setDate(date.getDate() + 4);
-  return new Intl.DateTimeFormat('en-IN', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'short',
-    timeZone: INDIA_TIME_ZONE,
-  }).format(date);
-}
-
 function shortOrderId(id: string) {
   return id.slice(0, 8).toUpperCase();
-}
-
-function displayOrderNumber(order: Order) {
-  return order.order_number || shortOrderId(order.id);
 }
 
 function getOrderStatusLabel(status?: string) {
@@ -1026,10 +1010,14 @@ export default function ProfilePage() {
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate text-[16px] font-semibold">{primaryItem?.product_name || 'Shopore Order'}</p>
+                            <p className="truncate text-[16px] font-semibold">{primaryItem?.product_name || `Order #${shortOrderId(order.id)}`}</p>
+                            <p className="mt-2 text-[12px] text-slate-500">
+                              {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                            </p>
                             <div className="mt-3 flex flex-wrap gap-3 text-[12px] text-slate-500">
+                              {primaryItem?.product_color && <span>Color: {primaryItem.product_color}</span>}
                               {primaryItem?.product_size && <span>Size: {primaryItem.product_size}</span>}
-                              <span>Qty: {itemCount}</span>
+                              {primaryItem?.product_brand && <span>{primaryItem.product_brand}</span>}
                             </div>
                           </div>
                           <p className="text-[17px] font-bold md:text-right">{formatPrice(order.total)}</p>
@@ -1039,11 +1027,6 @@ export default function ProfilePage() {
                               {status.title}
                             </p>
                             <p className="mt-2 text-[12px] text-slate-600">{status.subtitle}</p>
-                            {!['cancelled', 'refund_processing', 'refunded', 'delivered'].includes(order.status) && (
-                              <p className="mt-2 text-[12px] font-semibold text-emerald-700">
-                                Delivery by {formatDeliveryBy(order.created_at)}
-                              </p>
-                            )}
                             <span className="mt-4 inline-flex text-[12px] font-bold text-blue-600">View details</span>
                           </div>
                         </Link>
@@ -1230,7 +1213,7 @@ function OrderTrackingPanel({
   return (
     <div className="mt-5 border border-slate-200 bg-white">
       <div className="border-b border-slate-100 px-4 py-3 text-[12px] text-slate-500">
-        Order ID - <span className="font-semibold text-[#071225]">{displayOrderNumber(order)}</span>
+        Order ID - <span className="font-semibold text-[#071225]">{shortOrderId(order.id)}</span>
       </div>
 
       <div className="flex items-center gap-4 border-b border-slate-100 px-4 py-4">
