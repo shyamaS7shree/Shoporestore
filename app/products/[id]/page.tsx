@@ -643,7 +643,7 @@ export default function ProductDetailPage({
   };
 
   return (
-    <main className="min-h-screen bg-white px-4 pb-10 pt-[96px] font-['DM_Sans',Inter,sans-serif] text-[#071225] md:px-12">
+    <main className="min-h-screen bg-white px-3 pb-10 pt-[96px] font-['DM_Sans',Inter,sans-serif] text-[#071225] sm:px-4 md:px-12">
       <div className="mx-auto mb-5 flex w-full max-w-[1500px] justify-end">
         <button
           type="button"
@@ -655,7 +655,7 @@ export default function ProductDetailPage({
         </button>
       </div>
 
-      <div className="mx-auto grid w-full max-w-[1500px] grid-cols-1 gap-10 2xl:grid-cols-[minmax(420px,520px)_minmax(0,1fr)] xl:grid-cols-[minmax(400px,500px)_minmax(0,1fr)]">
+      <div className="mx-auto grid w-full max-w-[1500px] grid-cols-1 gap-6 sm:gap-8 2xl:grid-cols-[minmax(420px,520px)_minmax(0,1fr)] xl:grid-cols-[minmax(400px,500px)_minmax(0,1fr)] xl:gap-10">
         <section className="lg:self-stretch">
           <div className="lg:sticky lg:top-[96px]">
             <div className="relative mx-auto aspect-[4/5] max-h-[560px] w-full max-w-[460px] overflow-hidden bg-white">
@@ -664,7 +664,7 @@ export default function ProductDetailPage({
                 alt={`${product.brand} ${product.name}`}
                 fill
                 priority
-                className="object-contain p-8 sm:p-10"
+                className="object-contain p-4 sm:p-8 lg:p-10"
                 sizes="(max-width: 768px) 86vw, (max-width: 1280px) 460px, 460px"
               />
             </div>

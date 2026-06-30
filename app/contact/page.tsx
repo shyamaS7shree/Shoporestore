@@ -99,7 +99,7 @@ export default function ContactPage() {
         <section className="grid overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)] lg:grid-cols-[0.82fr_1.18fr]">
           <aside className="bg-[#071225] p-6 text-white sm:p-8">
             <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-pink-200">Contact Shopore</p>
-            <h1 className="mt-4 max-w-[360px] text-[34px] font-black leading-[1.05] tracking-[0] sm:text-[42px]">
+            <h1 className="mt-4 max-w-[360px] text-[30px] font-black leading-[1.05] tracking-[0] sm:text-[42px]">
               Tell us what needs attention.
             </h1>
             <p className="mt-4 max-w-[380px] text-[14px] leading-6 text-slate-300">

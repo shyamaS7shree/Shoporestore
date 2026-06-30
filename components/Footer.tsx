@@ -91,8 +91,8 @@ export default function Footer() {
       </div>
 
       <div className="mx-auto max-w-[1480px] px-6 py-12 sm:px-8 lg:py-14">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.15fr_0.62fr_0.72fr_0.78fr_1.25fr] lg:gap-10">
-          <div>
+        <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:gap-x-8 lg:grid-cols-[1.15fr_0.62fr_0.72fr_0.78fr_1.25fr] lg:gap-10">
+          <div className="col-span-2 lg:col-span-1">
             <Link href="/" className="text-[30px] font-black tracking-[0.16em] text-white no-underline">
               SHOPORE
             </Link>
@@ -103,7 +103,7 @@ export default function Footer() {
               <a href="tel:+917969727777" className="flex w-fit items-center gap-3 text-[12px] text-[#d1c8c3] no-underline transition hover:text-white">
                 <Phone size={14} className="text-[#f18aaf]" /> +91 796-972-7777
               </a>
-              <a href="mailto:shyamashreedas5@gmail.com" className="flex w-fit items-center gap-3 text-[12px] text-[#d1c8c3] no-underline transition hover:text-white">
+              <a href="mailto:shyamashreedas5@gmail.com" className="flex min-w-0 items-center gap-3 break-all text-[12px] text-[#d1c8c3] no-underline transition hover:text-white">
                 <Mail size={14} className="text-[#f18aaf]" /> shyamashreedas5@gmail.com
               </a>
             </div>
@@ -113,7 +113,7 @@ export default function Footer() {
           <FooterColumn title="Customer Care" links={helpLinks} />
           <FooterColumn title="Company" links={policyLinks} />
 
-          <div className="sm:col-span-2 lg:col-span-1">
+          <div className="col-span-2 lg:col-span-1">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#f18aaf]">Newsletter</p>
             <h3 className="mt-3 max-w-[290px] text-[20px] font-bold leading-7 text-white">
               A little more style in your inbox.

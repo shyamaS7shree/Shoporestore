@@ -455,11 +455,18 @@ export default function Home() {
         }
         @media (max-width: 600px) {
           .features-grid { grid-template-columns: 1fr; }
-          .products-grid { grid-template-columns: 1fr; }
-          .s-hero { padding: 150px 16px 44px; }
-          .hero-h1 { font-size: clamp(34px, 12vw, 48px); }
+          .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+          .product-image { height: auto; aspect-ratio: 3 / 4; }
+          .product-info { padding: 12px; }
+          .product-name { font-size: 13px; }
+          .product-desc { margin-bottom: 10px; font-size: 11px; }
+          .product-price { font-size: 15px; }
+          .product-btn { padding: 8px 5px; font-size: 11px; }
+          .s-hero { padding: 112px 16px 44px; }
+          .hero-h1 { font-size: clamp(32px, 11vw, 44px); }
           .hero-sub { font-size: 14px; }
           .hero-actions { flex-direction: column; align-items: stretch; }
+          .hero-actions a { width: 100%; text-align: center; }
           .stats-bar { padding: 22px 16px; }
           .deal-section,
           .products-section,
@@ -468,6 +475,7 @@ export default function Home() {
           .landing-five-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
           .landing-brand-grid { grid-auto-flow: row !important; grid-template-columns: 1fr !important; }
           .landing-brand-grid img { width: 100% !important; }
+          .landing-wide-section img { max-width: 100% !important; }
           .landing-brand-section { padding: 32px 16px !important; }
           .landing-brand-shell { flex-direction: column !important; align-items: stretch !important; }
           .landing-trust-row {
@@ -910,7 +918,6 @@ export default function Home() {
         <section className="landing-brand-section" style={{ padding: '40px 60px', background: '#ffffff', width: '100%' }}>
           <div className="landing-brand-shell" style={{ display: 'flex', alignItems: 'center', gap: '24px', width: '100%' }}>
             <div style={{ minWidth: '220px', paddingRight: '20px' }}>
-              <p style={{ fontSize: '18px', fontWeight: '400', color: '#1f2937', marginBottom: '4px' }}>THE</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                 <img src="/icon.png" alt="Shopore" style={{ width: '40px', height: '40px', objectFit: 'contain', display: 'block' }} />
                 <p style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: '800', letterSpacing: '4px', color: '#071225', lineHeight: 1, margin: 0 }}>SHOPORE</p>
@@ -918,7 +925,7 @@ export default function Home() {
               <div style={{ background: '#1f2937', color: '#ffffff', display: 'inline-block', padding: '4px 16px', fontWeight: '700', fontSize: '18px', marginBottom: '12px' }}>
                 STORE
               </div>
-              <p style={{ fontSize: '18px', fontWeight: '700', color: '#1f2937' }}>STARTING ₹99</p>
+              <p style={{ fontSize: '18px', fontWeight: '700', color: '#1f2937' }}>STARTING ₹499</p>
             </div>
 
             <div className="landing-brand-grid" style={{ display: 'grid', gridAutoFlow: 'column', placeContent: 'center', justifyContent: 'space-around', gap: '1.5rem', flex: 1, width: '100%' }}>

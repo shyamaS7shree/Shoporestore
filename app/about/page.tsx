@@ -15,7 +15,7 @@ export default function AboutPage() {
           <div className="grid lg:grid-cols-[1.25fr_0.75fr]">
             <div className="px-7 py-12 sm:px-11 lg:px-14 lg:py-16">
               <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#f18aaf]">About Shopore</p>
-              <h1 className="mt-4 max-w-[700px] text-[38px] font-black leading-[1.06] tracking-[-0.04em] sm:text-[54px]">Shopping should feel exciting, not exhausting.</h1>
+              <h1 className="mt-4 max-w-[700px] text-[32px] font-black leading-[1.06] tracking-[-0.04em] sm:text-[54px]">Shopping should feel exciting, not exhausting.</h1>
               <p className="mt-6 max-w-[650px] text-[14px] leading-7 text-[#bbb1ac]">Shopore brings fashion, beauty, home and lifestyle favourites into one thoughtful store—built for easy discovery and confident decisions.</p>
               <Link href="/explore" className="mt-8 inline-flex h-11 items-center gap-2 rounded-xl bg-[#f18aaf] px-5 text-[12px] font-bold text-[#211820] no-underline transition hover:-translate-y-0.5 hover:bg-white">
                 Explore Shopore <ArrowRight size={14} />

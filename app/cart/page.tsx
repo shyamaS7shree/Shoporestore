@@ -788,7 +788,7 @@ export default function CartPage() {
       : 'Check Out';
 
   return (
-    <main className="min-h-screen bg-[#f6f7fb] px-4 pb-16 pt-[120px] font-['DM_Sans',Inter,sans-serif] text-[#071225] md:px-8">
+    <main className="min-h-screen bg-[#f6f7fb] px-3 pb-16 pt-[104px] font-['DM_Sans',Inter,sans-serif] text-[#071225] sm:px-4 sm:pt-[120px] md:px-8">
       <div className="mx-auto max-w-[1240px] px-1 py-7 md:px-4 md:py-10">
         <div className="hidden">
           {[
@@ -832,10 +832,10 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5 md:p-6">
               {checkoutStep === 'bag' && (
                 <>
-                  <div className="mb-5 flex items-center justify-between gap-4">
+                  <div className="mb-5 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
                       <button
                         type="button"
@@ -849,7 +849,7 @@ export default function CartPage() {
                     </div>
                     <Link
                       href={CONTINUE_SHOPPING_HREF}
-                      className="rounded-full bg-slate-100 px-4 py-2 text-[12px] font-semibold text-[#071225] transition hover:bg-slate-200"
+                      className="self-end rounded-full bg-slate-100 px-4 py-2 text-[12px] font-semibold text-[#071225] transition hover:bg-slate-200"
                     >
                       Continue shopping &gt;
                     </Link>
@@ -897,10 +897,10 @@ export default function CartPage() {
                   <div className="divide-y divide-slate-100">
                     {cartItems.map((item) => (
                       <article key={item.key} className="bg-white px-2 py-5">
-                        <div className="grid grid-cols-1 items-center gap-3 md:grid-cols-[minmax(250px,1fr)_90px_120px_110px_64px]">
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 md:grid-cols-[minmax(250px,1fr)_90px_120px_110px_64px]">
                           <Link
                             href={buildCartProductHref(item.product)}
-                            className="flex min-w-0 items-center gap-4"
+                            className="col-span-2 flex min-w-0 items-center gap-3 md:col-span-1 md:gap-4"
                           >
                             <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-50">
                               <Image
@@ -921,7 +921,7 @@ export default function CartPage() {
                             <select
                               value={getProductSizeOptions(item.product).includes(item.product.size || '') ? item.product.size : ''}
                               onChange={(event) => updateItemSize(item.key, event.target.value)}
-                              className="h-10 w-24 rounded-lg border-0 bg-slate-100 px-3 text-[13px] outline-none"
+                              className="h-10 w-full max-w-24 rounded-lg border-0 bg-slate-100 px-3 text-[13px] outline-none"
                               aria-label={`Size for ${item.product.name}`}
                             >
                               <option value="" disabled>Size</option>
@@ -935,7 +935,7 @@ export default function CartPage() {
                             <span className="text-[12px] font-medium text-slate-400">N/A</span>
                           )}
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-end gap-2 md:justify-start">
                             <button
                               onClick={() => updateQuantity(item.key, item.quantity - 1)}
                               disabled={item.quantity <= 1}

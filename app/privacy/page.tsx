@@ -14,7 +14,7 @@ export default function PrivacyPage() {
           <div className="absolute -right-20 -top-28 h-80 w-80 rounded-full bg-violet-500/20 blur-3xl" />
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-400/15 text-violet-300 ring-1 ring-white/10"><LockKeyhole size={23} /></span>
           <p className="mt-8 text-[10px] font-black uppercase tracking-[0.22em] text-violet-300">Privacy at Shopore</p>
-          <h1 className="mt-4 max-w-[740px] text-[40px] font-black leading-[1.08] tracking-[-0.04em] sm:text-[52px]">Your information supports your order—not somebody else’s curiosity.</h1>
+          <h1 className="mt-4 max-w-[740px] text-[32px] font-black leading-[1.08] tracking-[-0.04em] sm:text-[52px]">Your information supports your order—not somebody else’s curiosity.</h1>
           <p className="mt-6 max-w-[690px] text-[14px] leading-7 text-violet-100/65">This policy explains what information we use, why it is needed and the choices available to you.</p>
         </div>
 

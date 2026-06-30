@@ -187,11 +187,27 @@ export default function Navbar() {
     if (lastPathnameRef.current === pathname) return;
 
     lastPathnameRef.current = pathname;
+    setIsOpen(false);
     setPendingMenu(null);
     setChatOpen(false);
     setChatError('');
     setChatInput('');
   }, [pathname]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeMenuOnDesktop = () => {
+      if (window.innerWidth > 900) setIsOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('resize', closeMenuOnDesktop);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('resize', closeMenuOnDesktop);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!chatOpen || !chatMessagesRef.current) return;
@@ -790,7 +806,7 @@ export default function Navbar() {
         .notifications-empty span { color: #64748b; font-size: 13px; }
         .mobile-toggle { display: none; background: transparent; border: none; color: #8b8aaa; cursor: pointer; padding: 6px; }
         .mobile-menu {
-          max-height: calc(100vh - 64px); overflow-y: auto;
+          top: 73px; max-height: calc(100vh - 64px); overflow-y: auto;
           background: #ffffff; border-bottom: 1px solid #f3d7e5;
           padding: 16px 24px 20px;
           box-shadow: 0 22px 55px rgba(15,23,42,0.18);
@@ -878,14 +894,9 @@ export default function Navbar() {
           .nav-icon-btn {
             padding: 7px;
           }
-          .agent-icon-btn {
-            width: 40px;
-            height: 40px;
-            padding: 4px;
-          }
-          .agent-icon-btn img {
-            width: 32px;
-            height: 32px;
+          .agent-icon-btn,
+          .mobile-hide-profile {
+            display: none;
           }
           .nav-icon-btn span {
             display: none;
@@ -902,7 +913,25 @@ export default function Navbar() {
             height: 260px;
           }
           .mobile-menu {
+            top: 57px;
             padding: 12px 16px 16px;
+          }
+        }
+        @media (max-width: 380px) {
+          .nav-logo {
+            font-size: 17px;
+            letter-spacing: 0.08em;
+          }
+          .logo-img {
+            width: 32px;
+            height: 32px;
+          }
+          .nav-right {
+            gap: 1px;
+          }
+          .nav-icon-btn,
+          .mobile-toggle {
+            padding: 6px;
           }
         }
       `}</style>
@@ -977,6 +1006,7 @@ export default function Navbar() {
           </button>
 
           <div
+            className="mobile-hide-profile"
             style={{ position: 'relative', paddingBottom: '14px', marginBottom: '-14px' }}
             onMouseEnter={openProfileMenu}
             onMouseLeave={closeProfileMenu}
@@ -1480,7 +1510,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="mobile-menu" style={{ position: 'fixed', top: scrolled ? '57px' : '73px', left: 0, right: 0, zIndex: 99 }}>
+        <div className="mobile-menu" style={{ position: 'fixed', right: 0, bottom: 0, left: 0, zIndex: 99 }}>
           <form className="mobile-search" onSubmit={handleSearchSubmit}>
             <input
               type="text"

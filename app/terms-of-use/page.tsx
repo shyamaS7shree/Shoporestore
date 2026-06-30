@@ -16,7 +16,7 @@ export default function TermsOfUsePage() {
       <section className="mx-auto max-w-[1180px] px-4 sm:px-6">
         <div className="rounded-[30px] border border-[#eadbd7] bg-white p-7 shadow-[0_20px_60px_rgba(70,35,45,0.07)] sm:p-11 lg:p-14">
           <div className="flex flex-col gap-8 border-b border-[#eadbd7] pb-9 sm:flex-row sm:items-end sm:justify-between">
-            <div><p className="text-[10px] font-black uppercase tracking-[0.22em] text-rose-600">Terms of use</p><h1 className="mt-4 text-[42px] font-black tracking-[-0.04em] sm:text-[54px]">The rules, in plain language.</h1><p className="mt-5 max-w-[680px] text-[14px] leading-7 text-[#75666d]">These terms explain the basic agreement for using Shopore, placing orders and interacting with our services.</p></div>
+            <div><p className="text-[10px] font-black uppercase tracking-[0.22em] text-rose-600">Terms of use</p><h1 className="mt-4 text-[32px] font-black tracking-[-0.04em] sm:text-[54px]">The rules, in plain language.</h1><p className="mt-5 max-w-[680px] text-[14px] leading-7 text-[#75666d]">These terms explain the basic agreement for using Shopore, placing orders and interacting with our services.</p></div>
             <div className="shrink-0 rounded-2xl bg-[#251d21] px-5 py-4 text-white"><FileCheck2 size={20} className="text-rose-300" /><p className="mt-3 text-[9px] uppercase tracking-[0.16em] text-white/45">Last updated</p><p className="mt-1 text-[12px] font-bold">30 June 2026</p></div>
           </div>
 

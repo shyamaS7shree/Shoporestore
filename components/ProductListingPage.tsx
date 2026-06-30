@@ -765,7 +765,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
     <>
       <div className="min-h-screen bg-white pt-[92px]">
         {/* Breadcrumb — normal flow, right below navbar offset */}
-        <div className="bg-white px-6 pb-2 text-[14px] text-gray-500">
+        <div className="truncate bg-white px-4 pb-2 text-[12px] text-gray-500 sm:px-6 sm:text-[14px]">
           Home / {getDepartmentFromTitle(config.title).replace(/^./, (letter) => letter.toUpperCase())} /{' '}
           <span className="font-semibold text-gray-900">{config.title}</span>
         </div>
@@ -777,7 +777,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
           </aside>
 
           {/* ── Main Content ── */}
-          <main className="flex-1">
+          <main className="min-w-0 flex-1">
             {/* Title + Sort — no box, just a plain row */}
             <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
@@ -789,31 +789,31 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:gap-3">
                 {/* Mobile filter trigger */}
                 <button
                   type="button"
                   onClick={() => setMobileFilterOpen(true)}
-                  className="flex cursor-pointer items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-[13px] font-semibold lg:hidden"
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-[13px] font-semibold lg:hidden"
                 >
                   <SlidersHorizontal size={16} />
                   Filters
                 </button>
 
                 {/* Sort dropdown */}
-                <div className="relative">
+                <div className="relative min-w-0">
                   <button
                     type="button"
                     onClick={() => setSortOpen((v) => !v)}
-                    className="flex cursor-pointer items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-[13px]"
+                    className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-[12px] sm:w-auto sm:gap-2 sm:px-4 sm:text-[13px]"
                   >
-                    <span className="text-gray-500">Sort By</span>
-                    <span className="font-bold text-gray-900">{sortBy}</span>
+                    <span className="hidden text-gray-500 sm:inline">Sort By</span>
+                    <span className="truncate font-bold text-gray-900">{sortBy}</span>
                     {sortOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                   </button>
 
                   {sortOpen && (
-                    <div className="absolute right-0 top-12 z-40 w-[210px] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl">
+                    <div className="absolute right-0 top-12 z-40 w-[min(210px,calc(100vw-32px))] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl">
                       {sortOptions.map((option) => (
                         <button
                           key={option}
@@ -838,7 +838,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
             </div>
 
             {/* Brand pills */}
-            <div className="mb-6 flex flex-wrap gap-2">
+            <div className="mb-6 flex flex-nowrap gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
               {config.brands.map((brand) => {
                 const active = activeBrands.includes(brand);
                 return (
@@ -846,7 +846,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
                     key={brand}
                     type="button"
                     onClick={() => toggleBrand(brand)}
-                    className="cursor-pointer rounded-full border px-4 py-1.5 text-[12px] font-medium transition"
+                    className="shrink-0 cursor-pointer rounded-full border px-4 py-1.5 text-[12px] font-medium transition"
                     style={{
                       borderColor: active ? config.accentColor : '#e5e7eb',
                       backgroundColor: active ? config.accentColor : '#ffffff',
@@ -866,7 +866,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
                   <span className="h-2.5 w-2.5 animate-pulse rounded-full" style={{ backgroundColor: config.accentColor }} />
                   Finding the best products for you...
                 </div>
-                <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-8 xl:grid-cols-4 2xl:grid-cols-5">
                   {Array.from({ length: 10 }).map((_, index) => (
                     <div key={index}>
                       <div className="category-skeleton aspect-[3/4] w-full rounded-xl" />
@@ -898,7 +898,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-8 xl:grid-cols-4 2xl:grid-cols-5">
                 {products.map((product) => (
                   <ProductCard
                     key={product.id}

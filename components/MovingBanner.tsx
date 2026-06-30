@@ -40,7 +40,7 @@ export default function MovingBanner() {
   }, [charIndex, isDeleting, messageIndex]);
 
   return (
-    <div className="w-full bg-gradient-to-r from-primary via-secondary to-primary text-primary-foreground overflow-hidden">
+    <div className="hidden w-full overflow-hidden bg-gradient-to-r from-primary via-secondary to-primary text-primary-foreground sm:block">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="text-center text-sm md:text-base font-medium h-6 flex items-center justify-center">
           {displayText}

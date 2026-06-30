@@ -792,8 +792,8 @@ export default function ProfilePage() {
               <h1 className="mt-3 text-[28px] font-black tracking-[-0.03em] sm:text-[36px]">Welcome back, {firstName}</h1>
               <p className="mt-2 text-[14px] text-slate-300">Manage your profile, purchases and support from one place.</p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <div className="min-w-[138px] rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 backdrop-blur-sm">
+            <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto sm:flex-wrap">
+              <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3 backdrop-blur-sm sm:min-w-[138px] sm:px-4">
                 <p className="text-[11px] uppercase tracking-wide text-slate-400">Profile complete</p>
                 <div className="mt-2 flex items-center gap-3">
                   <span className="text-[20px] font-black">{profileCompletion}%</span>
@@ -802,7 +802,7 @@ export default function ProfilePage() {
                   </span>
                 </div>
               </div>
-              <div className="min-w-[118px] rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 backdrop-blur-sm">
+              <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3 backdrop-blur-sm sm:min-w-[118px] sm:px-4">
                 <p className="text-[11px] uppercase tracking-wide text-slate-400">Account status</p>
                 <p className="mt-1 flex items-center gap-2 text-[16px] font-black">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" /> Active
@@ -872,7 +872,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="rounded-[22px] border border-slate-200/80 bg-white p-2.5 shadow-[0_12px_38px_rgba(15,23,42,0.06)]">
+            <div className="grid grid-cols-3 gap-1 rounded-[22px] border border-slate-200/80 bg-white p-2.5 shadow-[0_12px_38px_rgba(15,23,42,0.06)] lg:block">
               {[
                 { id: 'profile' as const, label: 'My Profile', caption: 'Personal details', icon: UserRound },
                 { id: 'orders' as const, label: 'My Orders', caption: 'Track purchases', icon: ShoppingBag },
@@ -885,23 +885,23 @@ export default function ProfilePage() {
                     key={item.id}
                     type="button"
                     onClick={() => changeTab(item.id)}
-                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left transition ${active ? 'bg-pink-50 text-pink-600 shadow-sm ring-1 ring-pink-100' : 'text-[#071225] hover:bg-slate-50'}`}
+                    className={`flex w-full min-w-0 flex-col items-center gap-2 rounded-2xl px-1.5 py-3 text-center transition sm:px-3 lg:flex-row lg:gap-3 lg:px-4 lg:py-4 lg:text-left ${active ? 'bg-pink-50 text-pink-600 shadow-sm ring-1 ring-pink-100' : 'text-[#071225] hover:bg-slate-50'}`}
                   >
                     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition ${active ? 'bg-white text-pink-600 shadow-sm' : 'bg-slate-100 text-slate-600'}`}>
                       <Icon size={18} strokeWidth={2} />
                     </span>
-                    <span>
-                      <span className="block text-[14px] font-semibold">{item.label}</span>
-                      <span className="mt-0.5 block text-[12px] text-slate-500">{item.caption}</span>
+                    <span className="min-w-0">
+                      <span className="block text-[11px] font-semibold leading-4 sm:text-[12px] lg:text-[14px]">{item.label}</span>
+                      <span className="mt-0.5 hidden text-[12px] text-slate-500 lg:block">{item.caption}</span>
                     </span>
-                    <ChevronRight size={17} className={`ml-auto transition ${active ? 'translate-x-0 text-pink-500' : 'text-slate-300'}`} />
+                    <ChevronRight size={17} className={`ml-auto hidden transition lg:block ${active ? 'translate-x-0 text-pink-500' : 'text-slate-300'}`} />
                   </button>
                 );
               })}
             </div>
           </aside>
 
-          <section className="min-h-[620px] rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_38px_rgba(15,23,42,0.06)] sm:p-8 lg:p-10">
+          <section className="min-h-0 rounded-[24px] border border-slate-200/80 bg-white p-4 shadow-[0_12px_38px_rgba(15,23,42,0.06)] sm:p-8 lg:min-h-[620px] lg:p-10">
             {activeTab === 'profile' && (
               <div>
                 <div className="mb-7 flex flex-col gap-4 rounded-[22px] border border-sky-100 bg-gradient-to-r from-sky-50 via-white to-cyan-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -1104,9 +1104,9 @@ export default function ProfilePage() {
                         <Link
                           key={order.id}
                           href={`/profile/orders/${order.id}`}
-                          className="grid items-center gap-5 rounded-md border border-slate-200 bg-white p-5 text-[#071225] no-underline transition hover:border-pink-200 hover:shadow-sm md:grid-cols-[120px_minmax(0,1fr)_160px_300px]"
+                          className="grid grid-cols-[80px_minmax(0,1fr)] items-center gap-4 rounded-md border border-slate-200 bg-white p-4 text-[#071225] no-underline transition hover:border-pink-200 hover:shadow-sm md:grid-cols-[120px_minmax(0,1fr)_160px_300px] md:gap-5 md:p-5"
                         >
-                          <div className="relative h-28 w-24 overflow-hidden rounded bg-slate-100">
+                          <div className="relative h-24 w-20 overflow-hidden rounded bg-slate-100 md:h-28 md:w-24">
                             {primaryItem?.product_image ? (
                               <Image src={primaryItem.product_image} alt={primaryItem.product_name || 'Ordered product'} fill className="object-cover" sizes="96px" />
                             ) : (
@@ -1120,8 +1120,8 @@ export default function ProfilePage() {
                               <span>Qty: {itemCount}</span>
                             </div>
                           </div>
-                          <p className="text-[17px] font-bold md:text-right">{formatPrice(order.total)}</p>
-                          <div>
+                          <p className="col-start-2 text-[17px] font-bold md:col-start-auto md:text-right">{formatPrice(order.total)}</p>
+                          <div className="col-span-2 rounded-xl bg-slate-50 p-3 md:col-span-1 md:bg-transparent md:p-0">
                             <p className={`flex items-center gap-2 text-[14px] font-bold ${status.text}`}>
                               <span className={`h-2.5 w-2.5 rounded-full ${status.dot}`} />
                               {status.title}
@@ -1286,9 +1286,9 @@ function OrderListSkeleton() {
       {[0, 1, 2].map((item) => (
         <div
           key={item}
-          className="grid min-h-[154px] items-center gap-5 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 md:grid-cols-[120px_minmax(0,1fr)_160px_300px]"
+          className="grid min-h-[154px] grid-cols-[80px_minmax(0,1fr)] items-center gap-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[120px_minmax(0,1fr)_160px_300px] md:gap-5 md:p-5"
         >
-          <span className="account-skeleton block h-28 w-24 rounded-xl" />
+          <span className="account-skeleton block h-24 w-20 rounded-xl md:h-28 md:w-24" />
           <span className="min-w-0 space-y-3">
             <span className="account-skeleton block h-4 w-[min(220px,75%)] rounded-full" />
             <span className="account-skeleton block h-3 w-[min(150px,55%)] rounded-full" />
@@ -1297,8 +1297,8 @@ function OrderListSkeleton() {
               <span className="account-skeleton block h-6 w-12 rounded-lg" />
             </span>
           </span>
-          <span className="account-skeleton block h-5 w-24 rounded-full md:justify-self-end" />
-          <span className="space-y-3">
+          <span className="account-skeleton col-start-2 block h-5 w-24 rounded-full md:col-start-auto md:justify-self-end" />
+          <span className="col-span-2 space-y-3 rounded-xl bg-slate-50 p-3 md:col-span-1 md:bg-transparent md:p-0">
             <span className="account-skeleton block h-4 w-32 rounded-full" />
             <span className="account-skeleton block h-3 w-44 max-w-full rounded-full" />
             <span className="account-skeleton block h-3 w-36 rounded-full" />

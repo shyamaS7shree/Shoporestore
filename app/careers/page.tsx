@@ -14,7 +14,7 @@ export default function CareersPage() {
           <div className="absolute -right-16 -top-24 h-72 w-72 rounded-full bg-sky-400/15 blur-3xl" />
           <BriefcaseBusiness className="text-sky-300" size={30} />
           <p className="mt-7 text-[10px] font-black uppercase tracking-[0.22em] text-sky-300">Careers at Shopore</p>
-          <h1 className="mt-4 max-w-[780px] text-[38px] font-black leading-[1.08] tracking-[-0.04em] sm:text-[52px]">Build retail experiences people enjoy using.</h1>
+          <h1 className="mt-4 max-w-[780px] text-[32px] font-black leading-[1.08] tracking-[-0.04em] sm:text-[52px]">Build retail experiences people enjoy using.</h1>
           <p className="mt-6 max-w-[680px] text-[14px] leading-7 text-slate-300">We value thoughtful builders who care about quality, clarity and the small details that turn shopping into a good experience.</p>
         </div>
 
