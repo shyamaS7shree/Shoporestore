@@ -164,6 +164,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState<MenuName | null>(null);
+  const [pendingMenu, setPendingMenu] = useState<MenuName | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
@@ -186,6 +187,7 @@ export default function Navbar() {
     if (lastPathnameRef.current === pathname) return;
 
     lastPathnameRef.current = pathname;
+    setPendingMenu(null);
     setChatOpen(false);
     setChatError('');
     setChatInput('');
@@ -309,13 +311,16 @@ export default function Navbar() {
   };
 
   const navItems: Array<{ label: string; href: string; hasMega?: boolean; menuName?: MenuName }> = [
-    { label: 'Men', href: '/men', hasMega: true, menuName: 'men' },
+    { label: 'Men', href: '/men/topwear', hasMega: true, menuName: 'men' },
     { label: 'Women', href: '/women', hasMega: true, menuName: 'women' },
-    { label: 'Kids', href: '/kids', hasMega: true, menuName: 'kids' },
+    { label: 'Kids', href: '/kids/boys-clothing', hasMega: true, menuName: 'kids' },
     { label: 'Home', href: '/home', hasMega: true, menuName: 'home' },
-    { label: 'Beauty', href: '/beauty', hasMega: true, menuName: 'beauty' },
-    { label: 'GenZ', href: '/genz', hasMega: true, menuName: 'genz' },
+    { label: 'Beauty', href: '/beauty/makeup', hasMega: true, menuName: 'beauty' },
+    { label: 'GenZ', href: '/genz/fashion', hasMega: true, menuName: 'genz' },
   ];
+
+  const isDepartmentSelected = (menuName?: MenuName) =>
+    Boolean(menuName && (pendingMenu === menuName || pathname === `/${menuName}` || pathname.startsWith(`/${menuName}/`)));
 
   const menCols = [MEN_MENU.slice(0, 2), MEN_MENU.slice(2, 5), MEN_MENU.slice(5, 9), MEN_MENU.slice(9, 11), MEN_MENU.slice(11, 14)];
   const womenCols = [WOMEN_MENU.slice(0, 3), WOMEN_MENU.slice(3, 6), WOMEN_MENU.slice(6, 9), WOMEN_MENU.slice(9, 12)];
@@ -883,20 +888,25 @@ export default function Navbar() {
             {navItems.map(item => (
               <li key={item.href}>
                 {item.hasMega && item.menuName ? (
-                  <span
-                    className={activeMenu === item.menuName ? 'active' : ''}
+                  <Link
+                    href={item.href}
+                    className={activeMenu === item.menuName || isDepartmentSelected(item.menuName) ? 'active' : ''}
                     style={{
                       '--menu-accent': MENU_COLORS[item.menuName],
-                      cursor: 'default',
-                      color: activeMenu === item.menuName ? MENU_COLORS[item.menuName] : '#6b7280',
+                      color: activeMenu === item.menuName || isDepartmentSelected(item.menuName) ? MENU_COLORS[item.menuName] : '#6b7280',
                       fontSize: '14px',
-                      fontWeight: '500',
+                      fontWeight: isDepartmentSelected(item.menuName) ? '700' : '500',
                     } as React.CSSProperties}
                     onMouseEnter={() => handleMenuEnter(item.menuName!)}
                     onMouseLeave={handleMenuLeave}
+                    onClick={() => {
+                      if (!isDepartmentSelected(item.menuName)) setPendingMenu(item.menuName!);
+                      setActiveMenu(null);
+                    }}
+                    aria-current={pathname === `/${item.menuName}` || pathname.startsWith(`/${item.menuName}/`) ? 'page' : undefined}
                   >
                     {item.label}
-                  </span>
+                  </Link>
                 ) : (
                   <Link href={item.href}>{item.label}</Link>
                 )}
@@ -1449,7 +1459,16 @@ export default function Navbar() {
             <button type="submit" className="mobile-search-icon" aria-label="Search products"><Search size={14} /></button>
           </form>
           {navItems.map(item => (
-            <Link key={item.href} href={item.href} className="mobile-nav-link" onClick={() => setIsOpen(false)}>
+            <Link
+              key={item.href}
+              href={item.href}
+              className="mobile-nav-link"
+              onClick={() => {
+                if (!isDepartmentSelected(item.menuName)) setPendingMenu(item.menuName || null);
+                setIsOpen(false);
+              }}
+              style={isDepartmentSelected(item.menuName) ? { color: item.menuName ? MENU_COLORS[item.menuName] : '#ec4899', fontWeight: 700 } : undefined}
+            >
               {item.label}
             </Link>
           ))}

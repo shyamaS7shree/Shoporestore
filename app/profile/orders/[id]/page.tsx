@@ -76,7 +76,8 @@ const ORDER_ADDRESS_SNAPSHOT_KEY = 'shopore-order-addresses';
 const RETURN_REQUEST_KEY = 'shopore-return-requests';
 const PROFILE_EXTRA_KEY = 'shopore_profile_extra';
 const INDIA_TIME_ZONE = 'Asia/Kolkata';
-const TRACKING_DURATION_MS = 2 * 24 * 60 * 60 * 1000;
+const ORDER_TRACKING_DURATION_MS = 4 * 24 * 60 * 60 * 1000;
+const PROCESS_TRACKING_DURATION_MS = 2 * 24 * 60 * 60 * 1000;
 const CANCEL_REASONS = [
   'Ordered by mistake',
   'Size or fit issue',
@@ -262,13 +263,13 @@ function getTrackingSteps(order: Order, now: number): TrackingStep[] {
       {
         label: order.status === 'refunded' ? 'Refund successful' : 'Refund update',
         date: addHoursDateTime(createdAt, 24),
-        targetAt: createdTime + TRACKING_DURATION_MS / 2,
+        targetAt: createdTime + PROCESS_TRACKING_DURATION_MS / 2,
         detail: order.status === 'refunded' ? 'Refund successfully processed.' : 'Refund is being processed.',
       },
       {
         label: 'Order closed',
         date: addHoursDateTime(createdAt, 48),
-        targetAt: createdTime + TRACKING_DURATION_MS,
+        targetAt: createdTime + PROCESS_TRACKING_DURATION_MS,
         detail: order.status === 'refunded' ? 'This order is closed.' : 'Order will close after refund confirmation.',
       },
     ];
@@ -278,10 +279,10 @@ function getTrackingSteps(order: Order, now: number): TrackingStep[] {
 
   const steps = [
     { label: 'Ordered', date: formatDateTime(createdAt), targetAt: createdTime, detail: 'Your order has been placed.' },
-    { label: 'Packed', date: addHoursDateTime(createdAt, 12), targetAt: createdTime + TRACKING_DURATION_MS * 0.25, detail: 'Seller has processed your order.' },
-    { label: 'Shipped', date: addHoursDateTime(createdAt, 24), targetAt: createdTime + TRACKING_DURATION_MS * 0.5, detail: 'Your item has been picked up by courier partner.' },
-    { label: 'Out for delivery', date: addHoursDateTime(createdAt, 36), targetAt: createdTime + TRACKING_DURATION_MS * 0.75, detail: 'Shipment is close to your delivery address.' },
-    { label: 'Delivered', date: addHoursDateTime(createdAt, 48), targetAt: createdTime + TRACKING_DURATION_MS, detail: 'Order delivered successfully.' },
+    { label: 'Packed', date: addHoursDateTime(createdAt, 24), targetAt: createdTime + ORDER_TRACKING_DURATION_MS * 0.25, detail: 'Seller has processed your order.' },
+    { label: 'Shipped', date: addHoursDateTime(createdAt, 48), targetAt: createdTime + ORDER_TRACKING_DURATION_MS * 0.5, detail: 'Your item has been picked up by courier partner.' },
+    { label: 'Out for delivery', date: addHoursDateTime(createdAt, 72), targetAt: createdTime + ORDER_TRACKING_DURATION_MS * 0.75, detail: 'Shipment is close to your delivery address.' },
+    { label: 'Delivered', date: addHoursDateTime(createdAt, 96), targetAt: createdTime + ORDER_TRACKING_DURATION_MS, detail: 'Order delivered successfully.' },
   ];
 
   return buildSteps(steps, now, delivered ? steps.length - 1 : -1);
@@ -292,10 +293,10 @@ function getReturnSteps(returnRequest: ReturnRequest, now: number): TrackingStep
   const requestedTime = parseOrderDate(requestedAt).getTime();
   const steps = [
     { label: 'Return requested', date: formatDateTime(requestedAt), targetAt: requestedTime, detail: 'Your return request has been received.' },
-    { label: 'Pickup review', date: addHoursDateTime(requestedAt, 12), targetAt: requestedTime + TRACKING_DURATION_MS * 0.25, detail: 'We are reviewing pickup and product details.' },
-    { label: 'Item pickup', date: addHoursDateTime(requestedAt, 24), targetAt: requestedTime + TRACKING_DURATION_MS * 0.5, detail: 'Return pickup is being processed.' },
-    { label: 'Refund processing', date: addHoursDateTime(requestedAt, 36), targetAt: requestedTime + TRACKING_DURATION_MS * 0.75, detail: 'Refund will start after return verification.' },
-    { label: 'Return completed', date: addHoursDateTime(requestedAt, 48), targetAt: requestedTime + TRACKING_DURATION_MS, detail: 'Return and refund process is complete.' },
+    { label: 'Pickup review', date: addHoursDateTime(requestedAt, 12), targetAt: requestedTime + PROCESS_TRACKING_DURATION_MS * 0.25, detail: 'We are reviewing pickup and product details.' },
+    { label: 'Item pickup', date: addHoursDateTime(requestedAt, 24), targetAt: requestedTime + PROCESS_TRACKING_DURATION_MS * 0.5, detail: 'Return pickup is being processed.' },
+    { label: 'Refund processing', date: addHoursDateTime(requestedAt, 36), targetAt: requestedTime + PROCESS_TRACKING_DURATION_MS * 0.75, detail: 'Refund will start after return verification.' },
+    { label: 'Return completed', date: addHoursDateTime(requestedAt, 48), targetAt: requestedTime + PROCESS_TRACKING_DURATION_MS, detail: 'Return and refund process is complete.' },
   ];
 
   return buildSteps(steps, now);

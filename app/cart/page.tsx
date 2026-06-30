@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
+  ArrowLeft,
   ChevronRight,
   Info,
   Minus,
@@ -33,6 +34,7 @@ import {
   readDeliveryLocation,
   saveDeliveryLocation,
 } from '@/lib/deliveryLocation';
+import { formatEstimatedDelivery } from '@/lib/deliveryEstimate';
 import { addNotification } from '@/lib/notifications';
 import { getProductSizeOptions } from '@/lib/productSizing';
 
@@ -815,15 +817,6 @@ export default function CartPage() {
           })}
         </div>
 
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className={`${cartItems.length === 0 ? 'hidden' : 'mb-6 inline-flex'} items-center gap-2 rounded-full bg-white px-4 py-2 text-[14px] font-semibold text-[#071225] shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md`}
-        >
-          <span className="text-[20px] leading-none">←</span>
-          Back
-        </button>
-
         {cartItems.length === 0 ? (
           <div className="mx-auto max-w-[560px] bg-white px-8 py-14 text-center shadow-sm">
             <h1 className="text-[24px] font-semibold">Your bag is empty</h1>
@@ -843,7 +836,17 @@ export default function CartPage() {
               {checkoutStep === 'bag' && (
                 <>
                   <div className="mb-5 flex items-center justify-between gap-4">
-                    <h1 className="text-[24px] font-bold">Shopping Cart</h1>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => router.back()}
+                        aria-label="Go back"
+                        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-[#071225] transition hover:border-slate-300 hover:bg-slate-100"
+                      >
+                        <ArrowLeft size={18} strokeWidth={2} />
+                      </button>
+                      <h1 className="truncate text-[24px] font-bold">Shopping Cart</h1>
+                    </div>
                     <Link
                       href={CONTINUE_SHOPPING_HREF}
                       className="rounded-full bg-slate-100 px-4 py-2 text-[12px] font-semibold text-[#071225] transition hover:bg-slate-200"
@@ -1022,7 +1025,9 @@ export default function CartPage() {
                           </div>
                           <p className="text-[14px] text-slate-600">
                             Estimated Delivery:{' '}
-                            <span className="font-semibold text-[#071225]">28 May 2026</span>
+                            <span className="font-semibold text-[#071225]">
+                              {formatEstimatedDelivery(new Date(), { includeYear: true })}
+                            </span>
                           </p>
                         </div>
                       ))}

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 import {
   Heart,
   ChevronDown,
@@ -510,15 +509,27 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
 
   useEffect(() => {
     let cancelled = false;
+    let loadingTimer: number | null = null;
+    const loadingStartedAt = Date.now();
     const imagePaths = config.products.map((product) => product.image).filter(Boolean) as string[];
+
+    const finishLoading = () => {
+      const remainingTime = Math.max(0, 500 - (Date.now() - loadingStartedAt));
+      loadingTimer = window.setTimeout(() => {
+        if (!cancelled) setApiLoaded(true);
+      }, remainingTime);
+    };
 
     setApiLoaded(false);
 
     if (imagePaths.length === 0) {
       setApiProducts([]);
       setApiAvailable(false);
-      setApiLoaded(true);
-      return;
+      finishLoading();
+      return () => {
+        cancelled = true;
+        if (loadingTimer !== null) window.clearTimeout(loadingTimer);
+      };
     }
 
     apiFetch('/api/products/by-images', {
@@ -531,7 +542,13 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
         return response.json();
       })
       .then((data) => {
-        if (cancelled || !Array.isArray(data)) return;
+        if (cancelled) return;
+        if (!Array.isArray(data)) {
+          setApiProducts([]);
+          setApiAvailable(false);
+          finishLoading();
+          return;
+        }
 
         const normalizedProducts = data.map((product: any) => ({
           id: Number(product.id),
@@ -577,17 +594,18 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
 
         setApiProducts(matchingProducts);
         setApiAvailable(matchingProducts.length > 0);
-        setApiLoaded(true);
+        finishLoading();
       })
       .catch(() => {
         if (cancelled) return;
         setApiProducts([]);
         setApiAvailable(false);
-        setApiLoaded(true);
+        finishLoading();
       });
 
     return () => {
       cancelled = true;
+      if (loadingTimer !== null) window.clearTimeout(loadingTimer);
     };
   }, [config.title, config.products]);
 
@@ -745,8 +763,6 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
 
   return (
     <>
-      <Navbar />
-
       <div className="min-h-screen bg-white pt-[92px]">
         {/* Breadcrumb — normal flow, right below navbar offset */}
         <div className="bg-white px-6 pb-2 text-[14px] text-gray-500">
@@ -852,15 +868,15 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
                 </div>
                 <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                   {Array.from({ length: 10 }).map((_, index) => (
-                    <div key={index} className="animate-pulse">
-                      <div className="aspect-[3/4] w-full rounded-xl bg-slate-200" />
-                      <div className="mt-3 h-3 w-2/5 rounded bg-slate-200" />
-                      <div className="mt-2 h-3 w-4/5 rounded bg-slate-100" />
+                    <div key={index}>
+                      <div className="category-skeleton aspect-[3/4] w-full rounded-xl" />
+                      <div className="category-skeleton mt-3 h-3 w-2/5 rounded" />
+                      <div className="category-skeleton mt-2 h-3 w-4/5 rounded" />
                       <div className="mt-3 flex gap-2">
-                        <div className="h-5 w-12 rounded bg-slate-200" />
-                        <div className="h-5 w-16 rounded bg-slate-100" />
+                        <div className="category-skeleton h-5 w-12 rounded" />
+                        <div className="category-skeleton h-5 w-16 rounded" />
                       </div>
-                      <div className="mt-3 h-4 w-3/5 rounded bg-slate-200" />
+                      <div className="category-skeleton mt-3 h-4 w-3/5 rounded" />
                     </div>
                   ))}
                 </div>

@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   CreditCard,
-  HelpCircle,
   Mail,
   Package,
   Phone,
@@ -13,11 +12,24 @@ import {
   AlertCircle,
   Camera,
   Save,
+  ChevronDown,
+  ChevronRight,
+  Clock3,
+  Headphones,
+  RotateCcw,
+  RefreshCw,
+  Ruler,
+  ShieldCheck,
+  Tags,
+  Truck,
+  UserRound,
+  ShoppingBag,
   X,
 } from 'lucide-react';
 import { apiFetch, getRefreshToken, getToken, getUser, saveAuth } from '@/lib/api';
 import RoundLoader from '@/components/RoundLoader';
 import { addNotification } from '@/lib/notifications';
+import { formatEstimatedDelivery } from '@/lib/deliveryEstimate';
 
 type ProfileTab = 'profile' | 'orders' | 'support';
 
@@ -35,6 +47,7 @@ type Order = {
   total: number;
   status: string;
   created_at: string;
+  updated_at?: string;
   payment_id?: string;
   order_items?: Array<{
     id: string;
@@ -156,17 +169,6 @@ function addDaysDateTime(value: string, days: number) {
   return formatDateTime(date.toISOString());
 }
 
-function formatDeliveryBy(value: string) {
-  const date = parseOrderDate(value);
-  date.setDate(date.getDate() + 4);
-  return new Intl.DateTimeFormat('en-IN', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'short',
-    timeZone: INDIA_TIME_ZONE,
-  }).format(date);
-}
-
 function shortOrderId(id: string) {
   return id.slice(0, 8).toUpperCase();
 }
@@ -189,7 +191,7 @@ function getOrderSummaryStatus(order: Order) {
   if (order.status === 'delivered') {
     return {
       dot: 'bg-emerald-600',
-      title: `Delivered on ${formatDate(order.created_at)}`,
+      title: `Delivered on ${formatDate(order.updated_at || order.created_at)}`,
       subtitle: 'Your item has been delivered',
       text: 'text-emerald-700',
     };
@@ -197,7 +199,7 @@ function getOrderSummaryStatus(order: Order) {
   if (order.status === 'cancelled') {
     return {
       dot: 'bg-red-500',
-      title: `Cancelled on ${formatDate(order.created_at)}`,
+      title: `Cancelled on ${formatDate(order.updated_at || order.created_at)}`,
       subtitle: 'Customer cancellation',
       text: 'text-red-600',
     };
@@ -322,6 +324,7 @@ export default function ProfilePage() {
   const [productImagesById, setProductImagesById] = useState<ProductImageLookup>({});
   const [productImagesLoaded, setProductImagesLoaded] = useState(false);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersLoadError, setOrdersLoadError] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
   const [cancelConfirmOrder, setCancelConfirmOrder] = useState<Order | null>(null);
@@ -435,10 +438,20 @@ export default function ProfilePage() {
     if (!user?.id) return Promise.resolve();
 
     setOrdersLoading(true);
-    return apiFetch(`/api/orders?user_id=${encodeURIComponent(user.id)}`)
-      .then((res) => res.json())
+    setOrdersLoadError(false);
+    const controller = new AbortController();
+    const requestTimeout = window.setTimeout(() => controller.abort(), 3000);
+    const minimumSkeletonTime = new Promise<void>((resolve) => window.setTimeout(resolve, 650));
+    const freshOrdersRequest = apiFetch(`/api/orders?user_id=${encodeURIComponent(user.id)}`, {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Orders request failed');
+        return res.json();
+      })
       .then((data) => {
-        if (!Array.isArray(data)) return;
+        if (!Array.isArray(data)) throw new Error('Invalid orders response');
 
         setOrders(data);
 
@@ -478,6 +491,12 @@ export default function ProfilePage() {
           localStorage.setItem(noteKey, JSON.stringify(notifiedStatuses));
         }
       })
+      .catch(() => {
+        setOrdersLoadError(true);
+      })
+      .finally(() => window.clearTimeout(requestTimeout));
+
+    return Promise.all([freshOrdersRequest, minimumSkeletonTime])
       .finally(() => setOrdersLoading(false));
   }, [user?.id]);
 
@@ -637,6 +656,8 @@ export default function ProfilePage() {
 
   const firstName = form.firstName || user?.email?.split('@')[0] || 'there';
   const displayAvatarUrl = pendingAvatarUrl || avatarUrl;
+  const profileFields = [form.firstName, form.lastName, form.phone, form.email, form.dateOfBirth, displayAvatarUrl];
+  const profileCompletion = Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100);
 
   if (!authChecked) {
     return (
@@ -666,7 +687,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f7f8] px-3 pb-16 pt-[104px] text-[#071225] sm:px-5 md:pt-[86px]">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#fdf4f8_0px,#f7f8fb_240px,#f7f8fb_100%)] px-3 pb-16 pt-[104px] text-[#071225] sm:px-5 md:pt-[86px]">
       {/* Toast Notification */}
       {toast && (
         <div className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center px-4">
@@ -761,20 +782,44 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-[1680px]">
-        <div className="mb-8 text-center">
-          <h1 className="text-[30px] font-semibold">My Account</h1>
-          <p className="mt-2 text-[15px] text-slate-500">Manage your profile, orders and support</p>
+      <div className="mx-auto w-full max-w-[1520px]">
+        <div className="relative mb-7 overflow-hidden rounded-[26px] bg-[#071225] px-6 py-7 text-white shadow-[0_22px_60px_rgba(7,18,37,0.16)] sm:px-8 sm:py-9">
+          <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-pink-500/20 blur-2xl" />
+          <div className="absolute bottom-[-90px] right-[18%] h-52 w-52 rounded-full bg-violet-500/15 blur-2xl" />
+          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-pink-300">Shopore account</p>
+              <h1 className="mt-3 text-[28px] font-black tracking-[-0.03em] sm:text-[36px]">Welcome back, {firstName}</h1>
+              <p className="mt-2 text-[14px] text-slate-300">Manage your profile, purchases and support from one place.</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <div className="min-w-[138px] rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 backdrop-blur-sm">
+                <p className="text-[11px] uppercase tracking-wide text-slate-400">Profile complete</p>
+                <div className="mt-2 flex items-center gap-3">
+                  <span className="text-[20px] font-black">{profileCompletion}%</span>
+                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/15">
+                    <span className="block h-full rounded-full bg-pink-400" style={{ width: `${profileCompletion}%` }} />
+                  </span>
+                </div>
+              </div>
+              <div className="min-w-[118px] rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 backdrop-blur-sm">
+                <p className="text-[11px] uppercase tracking-wide text-slate-400">Account status</p>
+                <p className="mt-1 flex items-center gap-2 text-[16px] font-black">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" /> Active
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="grid gap-5 sm:gap-7 lg:grid-cols-[340px_minmax(0,1fr)]">
-          <aside className="space-y-5">
-            <div className="rounded-xl border border-slate-200 bg-white px-6 py-8 text-center shadow-sm">
-              <div className="relative mx-auto h-40 w-40 rounded-full">
+        <div className="grid items-start gap-5 sm:gap-7 lg:grid-cols-[310px_minmax(0,1fr)]">
+          <aside className="space-y-5 lg:sticky lg:top-[94px]">
+            <div className="rounded-[22px] border border-slate-200/80 bg-white px-6 py-7 text-center shadow-[0_12px_38px_rgba(15,23,42,0.06)]">
+              <div className="relative mx-auto h-32 w-32 rounded-full">
                 <button
                   type="button"
                   onClick={() => displayAvatarUrl && setPreviewAvatarOpen(true)}
-                  className="relative block h-40 w-40 rounded-full focus:outline-none focus:ring-4 focus:ring-pink-100"
+                  className="relative block h-32 w-32 rounded-full focus:outline-none focus:ring-4 focus:ring-pink-100"
                   aria-label="Open profile photo"
                 >
                   {displayAvatarUrl ? (
@@ -782,11 +827,11 @@ export default function ProfilePage() {
                       src={displayAvatarUrl}
                       alt="Profile photo"
                       fill
-                      className="rounded-full border-4 border-pink-100 object-cover shadow-sm"
-                      sizes="160px"
+                      className="rounded-full border-4 border-white object-cover shadow-[0_8px_28px_rgba(236,72,153,0.18)] ring-4 ring-pink-100"
+                      sizes="128px"
                     />
                   ) : (
-                    <span className="flex h-40 w-40 items-center justify-center rounded-full border-4 border-pink-100 bg-pink-100 text-[46px] font-semibold text-pink-600">
+                    <span className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-pink-100 to-violet-100 text-[40px] font-black text-pink-600 ring-4 ring-pink-100">
                       {firstName[0].toUpperCase()}
                     </span>
                   )}
@@ -794,18 +839,20 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full bg-pink-500 text-white shadow-lg transition hover:bg-pink-600"
+                  className="absolute bottom-0 right-0 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white bg-pink-500 text-white shadow-lg transition hover:scale-105 hover:bg-pink-600"
                   aria-label="Choose profile photo"
                 >
                   <Camera size={18} />
                 </button>
               </div>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+              <h2 className="mt-5 truncate text-[18px] font-black">{form.firstName} {form.lastName}</h2>
+              <p className="mt-1 truncate text-[12px] text-slate-500">{form.email}</p>
               <div className="mt-5 flex justify-center gap-3">
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="inline-flex h-10 items-center gap-2 rounded border border-slate-300 px-4 text-[13px] font-semibold text-[#071225] transition hover:border-pink-300 hover:bg-pink-50"
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 text-[13px] font-semibold text-[#071225] transition hover:border-pink-300 hover:bg-pink-50"
                   aria-label="Change profile photo"
                 >
                   <Camera size={15} />
@@ -815,7 +862,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={saveAvatar}
                   disabled={!pendingAvatarUrl}
-                  className={`inline-flex h-10 items-center gap-2 rounded px-4 text-[13px] font-semibold text-white transition ${
+                  className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 text-[13px] font-semibold text-white transition ${
                     pendingAvatarUrl ? 'bg-[#071225] hover:bg-[#111d31]' : 'cursor-not-allowed bg-slate-300'
                   }`}
                 >
@@ -825,38 +872,58 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+            <div className="rounded-[22px] border border-slate-200/80 bg-white p-2.5 shadow-[0_12px_38px_rgba(15,23,42,0.06)]">
               {[
-                { id: 'profile' as const, label: 'My Profile', caption: 'Personal details', icon: '/user.png' },
-                { id: 'orders' as const, label: 'My Orders', caption: 'Track purchases', icon: '/tracking.png' },
-                { id: 'support' as const, label: 'Help & Support', caption: 'Get assistance', icon: '/support.png' },
+                { id: 'profile' as const, label: 'My Profile', caption: 'Personal details', icon: UserRound },
+                { id: 'orders' as const, label: 'My Orders', caption: 'Track purchases', icon: ShoppingBag },
+                { id: 'support' as const, label: 'Help & Support', caption: 'Get assistance', icon: Headphones },
               ].map((item) => {
                 const active = activeTab === item.id;
+                const Icon = item.icon;
                 return (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => changeTab(item.id)}
-                    className={`flex w-full items-center gap-3 rounded-lg px-4 py-4 text-left transition ${active ? 'text-pink-600' : 'text-[#071225] hover:bg-slate-50'}`}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left transition ${active ? 'bg-pink-50 text-pink-600 shadow-sm ring-1 ring-pink-100' : 'text-[#071225] hover:bg-slate-50'}`}
                   >
-                    <img src={item.icon} alt="" className="h-[19px] w-[19px] object-contain" />
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition ${active ? 'bg-white text-pink-600 shadow-sm' : 'bg-slate-100 text-slate-600'}`}>
+                      <Icon size={18} strokeWidth={2} />
+                    </span>
                     <span>
                       <span className="block text-[14px] font-semibold">{item.label}</span>
                       <span className="mt-0.5 block text-[12px] text-slate-500">{item.caption}</span>
                     </span>
-                    {active && <span className="ml-auto text-[18px]">›</span>}
+                    <ChevronRight size={17} className={`ml-auto transition ${active ? 'translate-x-0 text-pink-500' : 'text-slate-300'}`} />
                   </button>
                 );
               })}
             </div>
           </aside>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+          <section className="min-h-[620px] rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_38px_rgba(15,23,42,0.06)] sm:p-8 lg:p-10">
             {activeTab === 'profile' && (
               <div>
-                <div className="mb-7 border-b border-slate-100 pb-5">
-                  <h2 className="text-[20px] font-semibold">My Profile</h2>
-                  <p className="mt-1 text-[13px] text-slate-500">Update your personal information</p>
+                <div className="mb-7 flex flex-col gap-4 rounded-[22px] border border-sky-100 bg-gradient-to-r from-sky-50 via-white to-cyan-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-lg shadow-sky-200/70">
+                      <UserRound size={22} />
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-600">Profile details</p>
+                      <h2 className="mt-1 text-[22px] font-black tracking-[-0.02em]">Personal information</h2>
+                      <p className="mt-1 text-[13px] text-slate-500">Keep your contact and personal details up to date.</p>
+                    </div>
+                  </div>
+                  <div className="min-w-[150px] rounded-2xl border border-sky-100 bg-white px-4 py-3 shadow-sm">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                      <span>Profile strength</span>
+                      <span className="text-sky-700">{profileCompletion}%</span>
+                    </div>
+                    <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-sky-100">
+                      <span className="block h-full rounded-full bg-sky-500" style={{ width: `${profileCompletion}%` }} />
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-2">
@@ -874,8 +941,8 @@ export default function ProfilePage() {
 
                 <div className="mt-5">
                   <label className="mb-2 block text-[12px] font-semibold text-slate-700">Phone Number</label>
-                  <div className="flex h-11 border border-slate-300 bg-white">
-                    <span className="flex w-16 items-center justify-center border-r border-slate-200 text-[13px]">+91</span>
+                  <div className="flex h-12 overflow-hidden rounded-xl border border-slate-300 bg-white transition focus-within:border-pink-400 focus-within:ring-4 focus-within:ring-pink-50">
+                    <span className="flex w-16 items-center justify-center border-r border-slate-200 bg-slate-50 text-[13px] font-semibold">+91</span>
                     <input
                       value={form.phone}
                       onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
@@ -900,16 +967,16 @@ export default function ProfilePage() {
                     type="date"
                     value={form.dateOfBirth}
                     onChange={(event) => setForm((prev) => ({ ...prev, dateOfBirth: event.target.value }))}
-                    className="h-11 w-full border border-slate-300 px-4 text-[14px] outline-none focus:border-[#071225]"
+                    className="h-12 w-full rounded-xl border border-slate-300 px-4 text-[14px] outline-none transition focus:border-pink-400 focus:ring-4 focus:ring-pink-50"
                   />
                   <p className="mt-2 text-[12px] text-slate-400">Avail birthday discounts as a member</p>
                 </div>
 
                 <div className="mt-6">
                   <p className="mb-3 text-[12px] font-semibold text-slate-700">Gender</p>
-                  <div className="flex flex-wrap gap-8 text-[13px] text-slate-600">
+                  <div className="flex flex-wrap gap-3 text-[13px] text-slate-600">
                     {(['male', 'female', 'others'] as const).map((gender) => (
-                      <label key={gender} className="flex cursor-pointer items-center gap-2 capitalize">
+                      <label key={gender} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 capitalize transition ${form.gender === gender ? 'border-pink-300 bg-pink-50 text-pink-700' : 'border-slate-200 hover:bg-slate-50'}`}>
                         <input
                           type="radio"
                           name="gender"
@@ -928,8 +995,8 @@ export default function ProfilePage() {
                   type="button"
                   onClick={updateProfile}
                   disabled={!hasChanges || savingProfile}
-                  className={`mt-7 h-11 min-w-[190px] px-7 text-[14px] font-semibold text-white transition ${hasChanges && !savingProfile
-                      ? 'bg-[#071225] hover:bg-[#111d31] cursor-pointer'
+                  className={`mt-8 h-12 min-w-[210px] rounded-xl px-7 text-[14px] font-bold text-white shadow-sm transition ${hasChanges && !savingProfile
+                      ? 'bg-[#071225] hover:-translate-y-0.5 hover:bg-[#111d31] hover:shadow-lg cursor-pointer'
                       : 'bg-slate-300 cursor-not-allowed'
                     }`}
                 >
@@ -943,31 +1010,47 @@ export default function ProfilePage() {
 
             {activeTab === 'orders' && (
               <div>
-                <div className="mb-7 flex items-start justify-between border-b border-slate-100 pb-6">
-                  <div>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-                    <h2 className="text-[23px] font-semibold">My Orders</h2>
-                    <p className="mt-1 text-[13px] text-slate-500">Orders update here after successful payment</p>
+                <div className="mb-7 flex flex-col gap-4 rounded-[22px] border border-amber-100 bg-gradient-to-r from-amber-50 via-white to-orange-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-lg shadow-orange-200/70">
+                      <ShoppingBag size={22} />
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-600">Purchase history</p>
+                      <h2 className="mt-1 text-[22px] font-black tracking-[-0.02em]">My Orders</h2>
+                      <p className="mt-1 text-[13px] text-slate-500">Track every purchase, payment and delivery update.</p>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (user.id) {
-                        setOrdersLoading(true);
-                        apiFetch(`/api/orders?user_id=${encodeURIComponent(user.id)}`)
-                          .then((res) => res.json())
-                          .then((data) => Array.isArray(data) && setOrders(data))
-                          .finally(() => setOrdersLoading(false));
-                      }
-                    }}
-                    className="h-11 border border-slate-300 px-5 text-[13px] font-semibold transition hover:border-[#071225]"
-                  >
-                    Refresh
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full border border-amber-100 bg-white px-3 py-2 text-[11px] font-bold text-orange-700 shadow-sm">
+                      {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={refreshOrders}
+                      disabled={ordersLoading}
+                      className="inline-flex h-10 items-center gap-2 rounded-xl border border-orange-200 bg-white px-4 text-[12px] font-bold text-orange-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-wait disabled:opacity-60"
+                    >
+                      <RefreshCw size={14} />
+                      {ordersLoading ? 'Refreshing...' : 'Refresh'}
+                    </button>
+                  </div>
                 </div>
 
                 {ordersLoading ? (
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-12">
-                    <RoundLoader label="Loading your orders..." size={42} />
+                  <OrderListSkeleton />
+                ) : ordersLoadError && orders.length === 0 ? (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-10 text-center">
+                    <AlertCircle className="mx-auto text-amber-600" size={34} />
+                    <h3 className="mt-3 text-[16px] font-bold text-slate-900">Orders are taking too long</h3>
+                    <p className="mt-2 text-[13px] text-slate-600">The request stopped after 3 seconds. Please try refreshing again.</p>
+                    <button
+                      type="button"
+                      onClick={refreshOrders}
+                      className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-[#071225] px-5 text-[12px] font-bold text-white"
+                    >
+                      <RefreshCw size={14} /> Try again
+                    </button>
                   </div>
                 ) : orders.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center">
@@ -977,6 +1060,11 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    {ordersLoadError && (
+                      <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] font-semibold text-amber-800">
+                        <AlertCircle size={16} /> Refresh timed out after 3 seconds. Showing your previous orders.
+                      </div>
+                    )}
                     {orders.map((order) => {
                       const snapshotItems = orderSnapshots[order.id] || [];
                       const dbItems = order.order_items || [];
@@ -1041,7 +1129,7 @@ export default function ProfilePage() {
                             <p className="mt-2 text-[12px] text-slate-600">{status.subtitle}</p>
                             {!['cancelled', 'refund_processing', 'refunded', 'delivered'].includes(order.status) && (
                               <p className="mt-2 text-[12px] font-semibold text-emerald-700">
-                                Delivery by {formatDeliveryBy(order.created_at)}
+                                Estimated delivery by {formatEstimatedDelivery(order.created_at)}
                               </p>
                             )}
                             <span className="mt-4 inline-flex text-[12px] font-bold text-blue-600">View details</span>
@@ -1056,12 +1144,23 @@ export default function ProfilePage() {
 
             {activeTab === 'support' && (
               <div>
-                <div className="mb-7 border-b border-slate-100 pb-5">
-                  <h2 className="text-[20px] font-semibold">Help & Support</h2>
-                  <p className="mt-1 text-[13px] text-slate-500">Choose a topic. We usually reply within 24 hours.</p>
+                <div className="mb-7 flex flex-col gap-4 rounded-[22px] border border-pink-100 bg-gradient-to-r from-pink-50 via-white to-violet-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#071225] text-white shadow-lg shadow-slate-300/50">
+                      <Headphones size={22} />
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-500">Support center</p>
+                      <h2 className="mt-1 text-[22px] font-black tracking-[-0.02em]">How can we help?</h2>
+                      <p className="mt-1 text-[13px] text-slate-500">Choose the topic that best matches your question.</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-100 bg-white px-3 py-2 text-[11px] font-semibold text-emerald-700 shadow-sm">
+                    <Clock3 size={14} /> Usually replies in 24h
+                  </span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="grid gap-4 md:grid-cols-2">
                   <SupportCard
                     id="orders"
                     open={openSupport === 'orders'}
@@ -1069,6 +1168,7 @@ export default function ProfilePage() {
                     title="Order Issues"
                     subtitle="Track, cancel or return your order"
                     body="You can check order status in My Orders. For return or cancellation, keep your order ID ready so support can help faster."
+                    tone="pink"
                     onClick={() => setOpenSupport(openSupport === 'orders' ? null : 'orders')}
                   />
                   <SupportCard
@@ -1078,29 +1178,75 @@ export default function ProfilePage() {
                     title="Payment & Refunds"
                     subtitle="Payment failed, refund pending, or amount deducted"
                     body="If payment is deducted but order is not created, wait a few minutes and refresh My Orders. Refunds usually return to the original payment method based on bank timelines."
+                    tone="violet"
                     onClick={() => setOpenSupport(openSupport === 'payments' ? null : 'payments')}
+                  />
+                  <SupportCard
+                    id="delivery"
+                    open={openSupport === 'delivery'}
+                    icon={<Truck size={22} />}
+                    title="Delivery & Tracking"
+                    subtitle="Late delivery, tracking updates or address help"
+                    body="Open My Orders to see the latest delivery estimate. If tracking has not updated for 24 hours, contact us with your order number and delivery PIN code."
+                    tone="blue"
+                    onClick={() => setOpenSupport(openSupport === 'delivery' ? null : 'delivery')}
+                  />
+                  <SupportCard
+                    id="returns"
+                    open={openSupport === 'returns'}
+                    icon={<RotateCcw size={22} />}
+                    title="Returns & Exchange"
+                    subtitle="Return eligibility, pickup and exchange support"
+                    body="Eligible unused items can be returned within the return window. Keep the original tags, packaging and order details ready before requesting pickup."
+                    tone="emerald"
+                    onClick={() => setOpenSupport(openSupport === 'returns' ? null : 'returns')}
+                  />
+                  <SupportCard
+                    id="size"
+                    open={openSupport === 'size'}
+                    icon={<Ruler size={22} />}
+                    title="Product & Size Help"
+                    subtitle="Sizing, product details and availability"
+                    body="Check the product page for its size options, photos and stock. For sizing help, compare your measurements with the size guide before ordering."
+                    tone="amber"
+                    onClick={() => setOpenSupport(openSupport === 'size' ? null : 'size')}
+                  />
+                  <SupportCard
+                    id="offers"
+                    open={openSupport === 'offers'}
+                    icon={<Tags size={22} />}
+                    title="Offers & Coupons"
+                    subtitle="Coupon eligibility, discounts and promotions"
+                    body="Apply an eligible coupon in your bag before checkout. Some offers have minimum-order, product or payment-method conditions."
+                    tone="orange"
+                    onClick={() => setOpenSupport(openSupport === 'offers' ? null : 'offers')}
                   />
                   <SupportCard
                     id="account"
                     open={openSupport === 'account'}
-                    icon={<HelpCircle size={22} />}
+                    icon={<ShieldCheck size={22} />}
                     title="Account Help"
                     subtitle="Login, profile and account details"
                     body="For login or profile issues, update your details here first. If the issue continues, contact support with your registered email."
+                    tone="slate"
                     onClick={() => setOpenSupport(openSupport === 'account' ? null : 'account')}
                   />
                   <Link
                     href="/contact"
-                    className="flex items-center gap-4 rounded-xl border border-slate-200 p-5 text-[#071225] no-underline transition hover:border-pink-300 hover:bg-pink-50"
+                    className="group relative flex min-h-[124px] items-center gap-4 overflow-hidden rounded-[20px] border border-slate-700 bg-gradient-to-br from-[#071225] to-slate-800 p-5 text-white no-underline shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                   >
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
+                    <span className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-pink-500/20 blur-xl" />
+                    <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-pink-300 ring-1 ring-white/10">
                       <Phone size={22} />
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[15px] font-semibold">Contact Us</span>
-                      <span className="mt-1 block text-[13px] text-slate-500">Go to contact page for direct support</span>
+                    <span className="relative min-w-0 flex-1">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-pink-300">Need more help?</span>
+                      <span className="mt-1 block text-[16px] font-bold">Contact Us</span>
+                      <span className="mt-1 block text-[13px] text-slate-300">Go to contact page for direct support</span>
                     </span>
-                    <Mail size={18} className="text-slate-400" />
+                    <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/10 transition group-hover:translate-x-1 group-hover:bg-white/15">
+                      <Mail size={17} className="text-slate-200" />
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -1117,8 +1263,50 @@ export default function ProfilePage() {
         .animate-toast-in {
           animation: toast-in 0.25s ease forwards;
         }
+        @keyframes account-skeleton-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        .account-skeleton {
+          background: linear-gradient(90deg, #e9edf3 25%, #f8fafc 48%, #e9edf3 72%);
+          background-size: 200% 100%;
+          animation: account-skeleton-shimmer 1.35s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .account-skeleton { animation: none; }
+        }
       `}</style>
     </main>
+  );
+}
+
+function OrderListSkeleton() {
+  return (
+    <div className="space-y-4" role="status" aria-label="Loading orders" aria-live="polite">
+      {[0, 1, 2].map((item) => (
+        <div
+          key={item}
+          className="grid min-h-[154px] items-center gap-5 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 md:grid-cols-[120px_minmax(0,1fr)_160px_300px]"
+        >
+          <span className="account-skeleton block h-28 w-24 rounded-xl" />
+          <span className="min-w-0 space-y-3">
+            <span className="account-skeleton block h-4 w-[min(220px,75%)] rounded-full" />
+            <span className="account-skeleton block h-3 w-[min(150px,55%)] rounded-full" />
+            <span className="flex gap-2">
+              <span className="account-skeleton block h-6 w-16 rounded-lg" />
+              <span className="account-skeleton block h-6 w-12 rounded-lg" />
+            </span>
+          </span>
+          <span className="account-skeleton block h-5 w-24 rounded-full md:justify-self-end" />
+          <span className="space-y-3">
+            <span className="account-skeleton block h-4 w-32 rounded-full" />
+            <span className="account-skeleton block h-3 w-44 max-w-full rounded-full" />
+            <span className="account-skeleton block h-3 w-36 rounded-full" />
+          </span>
+        </div>
+      ))}
+      <span className="sr-only">Loading your latest orders…</span>
+    </div>
   );
 }
 
@@ -1143,7 +1331,7 @@ function ProfileInput({
         onChange={(event) => onChange?.(event.target.value)}
         readOnly={readOnly}
         disabled={readOnly}
-        className={`h-11 w-full border border-slate-300 px-4 text-[14px] outline-none focus:border-[#071225] ${
+        className={`h-12 w-full rounded-xl border border-slate-300 px-4 text-[14px] outline-none transition focus:border-pink-400 focus:ring-4 focus:ring-pink-50 ${
           readOnly ? 'cursor-not-allowed bg-slate-50 text-slate-500' : ''
         }`}
       />
@@ -1152,10 +1340,12 @@ function ProfileInput({
 }
 
 function SupportCard({
+  id,
   icon,
   title,
   subtitle,
   body,
+  tone,
   open,
   onClick,
 }: {
@@ -1164,27 +1354,45 @@ function SupportCard({
   title: string;
   subtitle: string;
   body: string;
+  tone: 'pink' | 'violet' | 'blue' | 'emerald' | 'amber' | 'orange' | 'slate';
   open: boolean;
   onClick: () => void;
 }) {
+  const palette = {
+    pink: { icon: 'bg-pink-100 text-pink-600', surface: 'from-pink-50/80 via-white to-white', border: 'border-pink-200', accent: 'bg-pink-500' },
+    violet: { icon: 'bg-violet-100 text-violet-600', surface: 'from-violet-50/80 via-white to-white', border: 'border-violet-200', accent: 'bg-violet-500' },
+    blue: { icon: 'bg-blue-100 text-blue-600', surface: 'from-blue-50/80 via-white to-white', border: 'border-blue-200', accent: 'bg-blue-500' },
+    emerald: { icon: 'bg-emerald-100 text-emerald-600', surface: 'from-emerald-50/80 via-white to-white', border: 'border-emerald-200', accent: 'bg-emerald-500' },
+    amber: { icon: 'bg-amber-100 text-amber-700', surface: 'from-amber-50/80 via-white to-white', border: 'border-amber-200', accent: 'bg-amber-500' },
+    orange: { icon: 'bg-orange-100 text-orange-600', surface: 'from-orange-50/80 via-white to-white', border: 'border-orange-200', accent: 'bg-orange-500' },
+    slate: { icon: 'bg-slate-100 text-slate-700', surface: 'from-slate-100/80 via-white to-white', border: 'border-slate-300', accent: 'bg-slate-600' },
+  }[tone];
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-xl border border-slate-200 p-5 text-left transition hover:border-pink-300 hover:bg-pink-50"
+      aria-expanded={open}
+      aria-controls={`support-${id}`}
+      className={`group relative min-h-[124px] w-full overflow-hidden rounded-[20px] border bg-gradient-to-br p-5 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${palette.surface} ${open ? palette.border : 'border-slate-200 hover:border-slate-300'}`}
     >
-      <span className="flex items-center gap-4">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-100 text-pink-600">
+      <span className={`absolute inset-y-5 left-0 w-1 rounded-r-full transition-all ${palette.accent} ${open ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
+      <span className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-white/80 blur-xl" />
+      <span className="relative flex items-center gap-4">
+        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 ring-white ${palette.icon}`}>
           {icon}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold">{title}</span>
+          <span className="mb-1 block text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">Help topic</span>
+          <span className="block text-[15px] font-bold">{title}</span>
           <span className="mt-1 block text-[13px] text-slate-500">{subtitle}</span>
         </span>
-        <span className="text-[20px] text-slate-400">{open ? '-' : '+'}</span>
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-white shadow-sm transition ${open ? `${palette.border} rotate-180` : 'border-slate-200 group-hover:border-slate-300'}`}>
+          <ChevronDown size={17} className="text-slate-500" />
+        </span>
       </span>
       {open && (
-        <span className="mt-4 block border-t border-slate-100 pt-4 text-[13px] leading-6 text-slate-600">
+        <span id={`support-${id}`} className="relative mt-4 block rounded-xl border border-white bg-white/80 px-4 py-3 text-[13px] leading-6 text-slate-600 shadow-sm">
           {body}
         </span>
       )}

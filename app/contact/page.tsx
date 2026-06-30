@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import {
   ArrowRight,
+  ArrowLeft,
   CheckCircle2,
   Headphones,
   Mail,
@@ -38,6 +40,7 @@ const accountLinks = [
 const subjects = ['Order help', 'Payment issue', 'Return or refund', 'Product question', 'Other'];
 
 export default function ContactPage() {
+  const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -82,8 +85,17 @@ export default function ContactPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f6f7fb] px-4 pb-16 pt-[118px] text-[#071225] sm:px-6">
+    <main className="min-h-screen bg-[#f6f7fb] px-4 pb-16 pt-[92px] text-[#071225] sm:px-6">
       <div className="mx-auto max-w-[1180px]">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="group mb-4 inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-[13px] font-bold text-[#071225] shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+        >
+          <ArrowLeft size={17} className="transition-transform group-hover:-translate-x-0.5" />
+          Back
+        </button>
+
         <section className="grid overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)] lg:grid-cols-[0.82fr_1.18fr]">
           <aside className="bg-[#071225] p-6 text-white sm:p-8">
             <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-pink-200">Contact Shopore</p>

@@ -447,3 +447,17 @@ svg {
     bottom: 18px !important;
   }
 }
+@keyframes category-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.category-skeleton {
+  background: linear-gradient(90deg, #e9edf3 25%, #f8fafc 48%, #e9edf3 72%);
+  background-size: 200% 100%;
+  animation: category-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-skeleton { animation: none; }
+}
