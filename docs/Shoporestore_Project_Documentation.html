@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shoporestore - Complete Project Documentation</title>
+  <style>
+    :root { --ink:#071225; --pink:#ec4899; --rose:#fff1f6; --line:#dbe3ee; --muted:#526176; --blue:#2563eb; --green:#047857; --amber:#b45309; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#eef2f7; color:var(--ink); font-family:"Segoe UI",Arial,sans-serif; font-size:10.2pt; line-height:1.58; }
+    .page { width:210mm; min-height:297mm; margin:8mm auto; padding:17mm 16mm 16mm; background:white; box-shadow:0 4px 24px #0f172a18; position:relative; }
+    .cover { min-height:297mm; overflow:hidden; display:flex; flex-direction:column; justify-content:center; background:linear-gradient(145deg,#071225 0%,#111d31 62%,#4a1632 100%); color:white; }
+    .cover:before,.cover:after { content:""; position:absolute; border-radius:50%; filter:blur(2px); }
+    .cover:before { width:150mm; height:150mm; right:-65mm; top:-52mm; background:#ec489933; }
+    .cover:after { width:100mm; height:100mm; left:-55mm; bottom:-35mm; background:#7c3aed26; }
+    .brand { font-family:Georgia,serif; font-size:16pt; font-weight:800; letter-spacing:.23em; position:relative; }
+    .eyebrow { color:#f9a8d4; font-size:8.5pt; font-weight:800; letter-spacing:.20em; text-transform:uppercase; }
+    .cover h1 { max-width:150mm; margin:8mm 0 4mm; font-size:37pt; line-height:1.04; letter-spacing:-.04em; position:relative; }
+    .cover .subtitle { max-width:145mm; font-size:14pt; line-height:1.6; color:#d9e1ee; }
+    .cover-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4mm; margin-top:16mm; position:relative; }
+    .cover-card { padding:5mm; border:1px solid #ffffff20; border-radius:4mm; background:#ffffff0d; }
+    .cover-card strong { display:block; color:#f9a8d4; font-size:10pt; margin-bottom:1mm; }
+    .cover-card span { color:#d9e1ee; font-size:9pt; }
+    .cover-meta { margin-top:20mm; color:#aab7ca; border-top:1px solid #ffffff20; padding-top:5mm; display:flex; justify-content:space-between; position:relative; }
+    h1,h2,h3,h4 { color:var(--ink); page-break-after:avoid; }
+    h1 { margin:0 0 7mm; font-size:26pt; line-height:1.12; letter-spacing:-.035em; }
+    h2 { margin:9mm 0 4mm; padding-bottom:2mm; border-bottom:1px solid var(--line); font-size:17pt; letter-spacing:-.02em; }
+    h3 { margin:6mm 0 2mm; font-size:12.5pt; }
+    h4 { margin:4mm 0 1mm; font-size:10.5pt; }
+    p { margin:0 0 3mm; }
+    ul,ol { margin:2mm 0 4mm 6mm; padding-left:5mm; }
+    li { margin-bottom:1.2mm; }
+    code { font-family:Consolas,monospace; font-size:8.8pt; background:#f1f5f9; padding:.4mm 1.1mm; border-radius:1mm; color:#7c2d12; overflow-wrap:anywhere; }
+    pre { white-space:pre-wrap; overflow-wrap:anywhere; background:#071225; color:#e5edf8; border-radius:3mm; padding:4mm; font:8.4pt/1.5 Consolas,monospace; page-break-inside:avoid; }
+    table { width:100%; border-collapse:collapse; margin:3mm 0 6mm; font-size:8.4pt; page-break-inside:auto; }
+    tr { page-break-inside:avoid; }
+    th { background:#071225; color:white; text-align:left; font-weight:700; }
+    th,td { border:1px solid var(--line); padding:2.2mm; vertical-align:top; }
+    tbody tr:nth-child(even) { background:#f8fafc; }
+    .toc { columns:2; column-gap:12mm; }
+    .toc a { color:var(--ink); text-decoration:none; display:block; padding:1.4mm 0; border-bottom:1px dotted #cbd5e1; }
+    .callout { margin:4mm 0; padding:4mm 5mm; border-left:1.5mm solid var(--blue); background:#eff6ff; border-radius:0 3mm 3mm 0; page-break-inside:avoid; }
+    .callout.good { border-color:var(--green); background:#ecfdf5; }
+    .callout.warn { border-color:var(--amber); background:#fffbeb; }
+    .callout.pink { border-color:var(--pink); background:var(--rose); }
+    .callout strong { display:block; margin-bottom:1mm; }
+    .grid2,.grid3 { display:grid; gap:4mm; margin:4mm 0; }
+    .grid2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .grid3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .card { border:1px solid var(--line); border-radius:3mm; padding:4mm; page-break-inside:avoid; }
+    .card h3 { margin-top:0; }
+    .pill { display:inline-block; margin:.6mm; padding:1mm 2.2mm; border-radius:99mm; background:#fce7f3; color:#9d174d; font-size:8pt; font-weight:700; }
+    .diagram { margin:5mm 0; padding:5mm; border:1px solid var(--line); border-radius:4mm; background:#f8fafc; page-break-inside:avoid; }
+    .flow { display:grid; grid-template-columns:1fr 10mm 1fr 10mm 1fr; align-items:center; text-align:center; gap:1mm; }
+    .node { padding:5mm 3mm; border-radius:3mm; background:white; border:1px solid #cbd5e1; font-weight:700; }
+    .arrow { font-size:18pt; color:var(--pink); }
+    .entity { border-top:1mm solid var(--pink); }
+    .small { color:var(--muted); font-size:8.7pt; }
+    .status { font-size:7.5pt; padding:.7mm 1.7mm; border-radius:99mm; font-weight:800; white-space:nowrap; }
+    .done { color:#065f46; background:#d1fae5; }
+    .partial { color:#92400e; background:#fef3c7; }
+    .local { color:#1e40af; background:#dbeafe; }
+    .page-break { break-before:page; }
+    .footer-note { position:absolute; bottom:8mm; left:16mm; right:16mm; display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:2mm; color:#94a3b8; font-size:7.5pt; }
+    @page { size:A4; margin:0; }
+    @media print { body{background:white;} .page{margin:0;box-shadow:none;break-after:page;} a{color:inherit;} }
+  </style>
+</head>
+<body>
+
+<section class="page cover">
+  <div class="eyebrow">Complete technical documentation</div>
+  <div class="brand">SHOPORE</div>
+  <h1>Shoporestore E-commerce Platform</h1>
+  <p class="subtitle">Architecture, features, frontend, backend, SQL Server data model, API reference, setup, testing, deployment readiness, limitations, and interview guide.</p>
+  <div class="cover-grid">
+    <div class="cover-card"><strong>Frontend</strong><span>Next.js 16, React 19, TypeScript, Tailwind CSS</span></div>
+    <div class="cover-card"><strong>Backend</strong><span>ASP.NET Core Web API, .NET 10, EF Core</span></div>
+    <div class="cover-card"><strong>Database</strong><span>Microsoft SQL Server, Shopore_DB</span></div>
+  </div>
+  <div class="cover-meta"><span>Prepared from the source repository</span><span>30 June 2026</span></div>
+</section>
+
+<section class="page">
+  <div class="eyebrow">Document guide</div>
+  <h1>Table of contents</h1>
+  <div class="toc">
+    <a href="#overview">1. Executive overview</a>
+    <a href="#scope">2. Scope and objectives</a>
+    <a href="#stack">3. Technology stack</a>
+    <a href="#architecture">4. System architecture</a>
+    <a href="#structure">5. Repository structure</a>
+    <a href="#frontend">6. Frontend design</a>
+    <a href="#features">7. Functional modules</a>
+    <a href="#responsive">8. Responsive design</a>
+    <a href="#state">9. State and browser storage</a>
+    <a href="#workflows">10. Core workflows</a>
+    <a href="#backend">11. Backend design</a>
+    <a href="#api">12. API reference</a>
+    <a href="#database">13. Database design</a>
+    <a href="#security">14. Security assessment</a>
+    <a href="#setup">15. Local setup</a>
+    <a href="#testing">16. Testing and verification</a>
+    <a href="#deployment">17. Deployment plan</a>
+    <a href="#limitations">18. Current limitations</a>
+    <a href="#roadmap">19. Recommended roadmap</a>
+    <a href="#interview">20. Interview presentation</a>
+    <a href="#troubleshooting">21. Troubleshooting</a>
+    <a href="#appendix">22. Commands and configuration</a>
+  </div>
+  <div class="callout pink" style="margin-top:12mm">
+    <strong>Purpose of this document</strong>
+    This is a source-grounded description of the current project. It separates completed behavior from development-only behavior and recommended production improvements.
+  </div>
+  <h2>Document status</h2>
+  <table>
+    <tr><th>Item</th><th>Value</th></tr>
+    <tr><td>Project name</td><td>Shoporestore / Shopore</td></tr>
+    <tr><td>Project type</td><td>Full-stack responsive e-commerce web application</td></tr>
+    <tr><td>Primary market assumptions</td><td>India; INR pricing; PIN-code delivery; Asia/Kolkata dates</td></tr>
+    <tr><td>Current operation</td><td>Local frontend + local ASP.NET API + SQL Server</td></tr>
+    <tr><td>Documentation date</td><td>30 June 2026</td></tr>
+  </table>
+  <div class="footer-note"><span>Shoporestore Project Documentation</span><span>Source-grounded edition</span></div>
+</section>
+
+<section class="page" id="overview">
+  <div class="eyebrow">01 · Overview</div>
+  <h1>Executive overview</h1>
+  <p>Shoporestore is a full-stack shopping platform built to demonstrate a complete customer journey: discovering products, filtering a catalog, viewing product details, maintaining a bag and wishlist, authenticating an account, saving addresses, paying or selecting cash on delivery, viewing orders, cancelling orders, requesting returns, reviewing purchased products, and contacting support.</p>
+  <p>The user interface is a Next.js App Router application. It communicates through a shared API bridge with a separate ASP.NET Core Web API. The backend uses Entity Framework Core with Microsoft SQL Server and contains compatibility logic for the existing <code>Shopore_DB</code> legacy schema.</p>
+  <div class="grid3">
+    <div class="card"><h3>Customer experience</h3><p>Responsive storefront, rich categories, search, filters, cart, payments, profile and order tracking.</p></div>
+    <div class="card"><h3>Business services</h3><p>Catalog, account, address, order, payment, inventory, wishlist, reviews and subscriber APIs.</p></div>
+    <div class="card"><h3>Data persistence</h3><p>SQL Server stores core commerce records; browser storage supports fast cart and user-interface state.</p></div>
+  </div>
+  <h2 id="scope">Scope and objectives</h2>
+  <div class="grid2">
+    <div class="card"><h3>Primary objectives</h3><ul><li>Provide a modern multi-category shopping interface.</li><li>Support desktop, tablet and mobile layouts.</li><li>Separate frontend and backend responsibilities.</li><li>Persist users, products, orders, payments and reviews.</li><li>Demonstrate realistic checkout and account workflows.</li></ul></div>
+    <div class="card"><h3>Project boundaries</h3><ul><li>No admin dashboard is exposed in the current frontend.</li><li>Shipping carrier integration is simulated.</li><li>Email/SMS and production OTP delivery are not connected.</li><li>Payment verification requires security hardening before real use.</li><li>Hosting configuration is not yet production-ready.</li></ul></div>
+  </div>
+  <div class="callout good"><strong>Overall assessment</strong>The project is suitable as a substantial portfolio demonstration. It shows frontend composition, responsive design, API integration, relational modelling, checkout logic and legacy-database compatibility. It should be presented as a working full-stack prototype, not yet as a production commerce service.</div>
+  <div class="footer-note"><span>Executive Overview</span><span>Shopore</span></div>
+</section>
+
+<section class="page" id="stack">
+  <div class="eyebrow">02 · Technology</div>
+  <h1>Technology stack</h1>
+  <table>
+    <tr><th>Layer</th><th>Technology</th><th>Responsibility</th></tr>
+    <tr><td>Web framework</td><td>Next.js 16 App Router</td><td>Routing, page composition, production bundling and static/dynamic rendering.</td></tr>
+    <tr><td>UI runtime</td><td>React 19</td><td>Interactive components, client state and lifecycle behavior.</td></tr>
+    <tr><td>Language</td><td>TypeScript 5.7</td><td>Typed frontend models and safer component contracts.</td></tr>
+    <tr><td>Styling</td><td>Tailwind CSS 4 + component CSS</td><td>Responsive layouts, component presentation and design tokens.</td></tr>
+    <tr><td>UI primitives</td><td>Radix UI / shadcn-style components</td><td>Dialogs, forms, tabs, popovers, controls and accessible primitives.</td></tr>
+    <tr><td>Icons / feedback</td><td>Lucide React, Sonner</td><td>Icons and user notifications.</td></tr>
+    <tr><td>API</td><td>ASP.NET Core Web API, .NET 10</td><td>HTTP endpoints and commerce business operations.</td></tr>
+    <tr><td>Persistence</td><td>EF Core 10 + SQL Server</td><td>Object-relational mapping and relational storage.</td></tr>
+    <tr><td>API documentation</td><td>Swagger / OpenAPI</td><td>Local endpoint discovery and testing.</td></tr>
+    <tr><td>Payment clients</td><td>Razorpay Checkout, Google Pay JS</td><td>Checkout user experience; backend confirmation is currently prototype-level.</td></tr>
+    <tr><td>Analytics</td><td>Vercel Analytics</td><td>Enabled only in production builds.</td></tr>
+  </table>
+  <h2>Key package characteristics</h2>
+  <p>The frontend uses client components where browser storage, modal interaction and payment SDKs are required. Shared UI components are under <code>components/</code>; reusable commerce behavior is under <code>lib/</code>. The backend uses controller-based routing, DTOs for snake_case frontend contracts, EF Core entities, response mappers and startup schema services.</p>
+  <div class="callout warn"><strong>Version note</strong>The backend project targets <code>net10.0</code>. A deployment machine must have a compatible .NET runtime, or the application must be published as self-contained.</div>
+  <div class="footer-note"><span>Technology Stack</span><span>Next.js + ASP.NET Core + SQL Server</span></div>
+</section>
+
+<section class="page" id="architecture">
+  <div class="eyebrow">03 · Architecture</div>
+  <h1>System architecture</h1>
+  <div class="diagram">
+    <div class="flow">
+      <div class="node">Browser<br><span class="small">Desktop / tablet / mobile</span></div><div class="arrow">→</div>
+      <div class="node">Next.js Storefront<br><span class="small">React + TypeScript</span></div><div class="arrow">→</div>
+      <div class="node">ASP.NET Core API<br><span class="small">Controllers + services</span></div>
+    </div>
+    <div style="text-align:right;font-size:19pt;color:#ec4899;margin:1mm 27mm 1mm 0">↓</div>
+    <div class="node" style="width:31%;margin-left:auto">SQL Server<br><span class="small">Shopore_DB</span></div>
+  </div>
+  <h2>Request flow</h2>
+  <ol>
+    <li>A user interacts with a page or shared component in the Next.js frontend.</li>
+    <li>The frontend calls <code>apiFetch(path, init)</code> from <code>lib/api.ts</code>.</li>
+    <li><code>buildApiUrl</code> combines the path with <code>NEXT_PUBLIC_API_URL</code>.</li>
+    <li>An ASP.NET controller validates and processes the request.</li>
+    <li>EF Core reads or changes records in <code>Shopore_DB</code>.</li>
+    <li>The backend response mapper returns frontend-friendly JSON.</li>
+    <li>The UI updates its component state and, where applicable, its browser cache.</li>
+  </ol>
+  <h2>Separation of concerns</h2>
+  <div class="grid2">
+    <div class="card"><h3>Frontend owns</h3><ul><li>Rendering and navigation</li><li>Responsive interaction</li><li>Catalog filters and presentation</li><li>Cart cache and optimistic wishlist state</li><li>Payment SDK launch</li><li>Toasts, loaders and skeletons</li></ul></div>
+    <div class="card"><h3>Backend owns</h3><ul><li>User and profile persistence</li><li>Address and order persistence</li><li>Product catalog and inventory</li><li>Payment/order records</li><li>Verified-purchase review eligibility</li><li>Database compatibility and seed routines</li></ul></div>
+  </div>
+  <div class="callout"><strong>Primary integration seam</strong><code>lib/api.ts</code> is the durable frontend/backend boundary. Changing the API host should require updating <code>NEXT_PUBLIC_API_URL</code>, not editing every page.</div>
+  <div class="footer-note"><span>System Architecture</span><span>Layered full-stack design</span></div>
+</section>
+
+<section class="page" id="structure">
+  <div class="eyebrow">04 · Codebase</div>
+  <h1>Repository structure</h1>
+  <pre>Shoporestore/
+├─ app/                         Next.js routes and page components
+│  ├─ auth/                     Login and registration
+│  ├─ men, women, kids/         Fashion departments
+│  ├─ home, beauty, genz/       Additional departments
+│  ├─ products/[id]/            Product details and reviews
+│  ├─ cart/, checkout/          Bag and checkout flow
+│  ├─ profile/                  Account, orders and support
+│  └─ about, contact, policies  Informational pages
+├─ components/                  Navbar, footer, listings, modals and UI primitives
+├─ lib/                         API, cart, wishlist, pricing and delivery utilities
+├─ data/knowledge/              FAQ and support knowledge content
+├─ public/                      Product, banner and branding media
+├─ scripts/                     Product seeding utility
+├─ docs/                        Generated project documentation
+└─ Shoporestore_Backend/
+   └─ Shoporestore.Api/
+      ├─ Controllers/           HTTP API endpoints
+      ├─ Data/                  EF Core DbContext
+      ├─ Dtos/                  Request contracts
+      ├─ Models/                Catalog and commerce entities
+      ├─ Services/              Mapping, schema, password and seed services
+      └─ Program.cs             Dependency injection and middleware</pre>
+  <h2>Frontend route map</h2>
+  <table>
+    <tr><th>Area</th><th>Routes</th><th>Purpose</th></tr>
+    <tr><td>Landing</td><td><code>/</code>, <code>/explore</code></td><td>Campaigns, featured products, brands and discovery.</td></tr>
+    <tr><td>Departments</td><td><code>/men/[section]</code>, <code>/women/[section]</code>, <code>/kids/[section]</code>, <code>/home/[section]</code>, <code>/beauty/[section]</code>, <code>/genz/[section]</code></td><td>Category and subcategory product listings.</td></tr>
+    <tr><td>Product</td><td><code>/products/[id]</code></td><td>Details, sizing, delivery check, wishlist and reviews.</td></tr>
+    <tr><td>Commerce</td><td><code>/cart</code>, <code>/checkout</code>, <code>/wishlist</code></td><td>Bag, payment selection and saved products.</td></tr>
+    <tr><td>Account</td><td><code>/profile</code>, <code>/profile/orders/[id]</code></td><td>Profile, order history, status, cancellation and returns.</td></tr>
+    <tr><td>Authentication</td><td><code>/auth/login</code>, <code>/auth/register</code>, <code>/verify-email</code></td><td>Account access and development verification.</td></tr>
+    <tr><td>Content</td><td><code>/about</code>, <code>/careers</code>, <code>/contact</code>, <code>/help-faqs</code>, <code>/delivery-policy</code>, <code>/privacy</code>, <code>/terms-of-use</code></td><td>Company, support and policy information.</td></tr>
+  </table>
+  <div class="footer-note"><span>Repository Structure</span><span>Frontend and backend solution</span></div>
+</section>
+
+<section class="page" id="frontend">
+  <div class="eyebrow">05 · Frontend</div>
+  <h1>Frontend design</h1>
+  <h2>Shared shell</h2>
+  <p><code>app/layout.tsx</code> composes the moving offer banner, responsive navigation, page content, footer, toast system, payment scripts and production analytics. The navbar contains department navigation, search, chat support, account access, notifications, bag status and a mobile drawer.</p>
+  <h2>Catalog system</h2>
+  <p><code>ProductListingPage</code> provides a reusable catalog experience. Individual department route files supply configuration such as title, image directory, brands, sizes and product files. Catalog screens support:</p>
+  <div class="grid3">
+    <div class="card"><h3>Discovery</h3><p>Departments, mega menus, landing campaigns and search.</p></div>
+    <div class="card"><h3>Refinement</h3><p>Brand, category, price, size, color, discount and rating filters.</p></div>
+    <div class="card"><h3>Ordering</h3><p>Popularity, price and other sort choices with responsive controls.</p></div>
+  </div>
+  <h2>Product details</h2>
+  <p>The product page retrieves backend data when available and accepts route-query fallback data for catalog compatibility. It displays pricing, discount, size selection, delivery PIN validation, product services, bag/wishlist actions and a verified-purchase review section.</p>
+  <h2>Design system</h2>
+  <p>The visual language uses a dark navy primary color, pink accents, light neutral surfaces, rounded cards and restrained shadows. Shared Radix-based primitives provide accessible interaction patterns while Tailwind utilities handle most responsive spacing and layout.</p>
+  <div class="callout pink"><strong>Asset library</strong>The <code>public/</code> directory contains close to one thousand catalog and marketing assets across AVIF, WebP, PNG, JPG, SVG, GIF and MP4 formats. In production, these should be compressed, deduplicated and moved to object storage or a CDN.</div>
+  <div class="footer-note"><span>Frontend Design</span><span>Next.js App Router</span></div>
+</section>
+
+<section class="page" id="features">
+  <div class="eyebrow">06 · Features</div>
+  <h1>Functional modules</h1>
+  <table>
+    <tr><th>Module</th><th>Implemented behavior</th><th>Status</th></tr>
+    <tr><td>Authentication</td><td>Email/password registration and login, phone login, OTP test flow, password reset and remembered/session login.</td><td><span class="status partial">Prototype security</span></td></tr>
+    <tr><td>Catalog</td><td>Multiple departments, configurable sections, products, brands, prices, images, sizes, filters and sorting.</td><td><span class="status done">Implemented</span></td></tr>
+    <tr><td>Product details</td><td>Details, pricing, size, delivery PIN, reviews, image preview, share, wishlist and add-to-bag.</td><td><span class="status done">Implemented</span></td></tr>
+    <tr><td>Cart</td><td>Variant-aware keys, quantity changes, removal, totals, selected address and checkout steps.</td><td><span class="status done">Implemented</span></td></tr>
+    <tr><td>Wishlist</td><td>Immediate local cache plus backend synchronization for authenticated users.</td><td><span class="status done">Implemented</span></td></tr>
+    <tr><td>Addresses</td><td>Create, list, edit and soft-delete customer delivery addresses.</td><td><span class="status done">Implemented</span></td></tr>
+    <tr><td>Payments</td><td>COD, Razorpay client flow and Google Pay client flow.</td><td><span class="status partial">Needs verification hardening</span></td></tr>
+    <tr><td>Orders</td><td>Create one order per cart item, order history, detail view, address snapshot, cancellation and order splitting.</td><td><span class="status done">Implemented</span></td></tr>
+    <tr><td>Returns/refunds</td><td>User-interface request tracking, cancellation/refund status presentation.</td><td><span class="status partial">Partly browser-local</span></td></tr>
+    <tr><td>Reviews</td><td>Only eligible buyers can create/update ratings, comments and optional image data.</td><td><span class="status done">Implemented</span></td></tr>
+    <tr><td>Support</td><td>Help topics, contact form, FAQ knowledge and rule-based chat answers.</td><td><span class="status partial">Delivery integrations pending</span></td></tr>
+    <tr><td>Notifications</td><td>Browser-side notification list for order, refund and account events.</td><td><span class="status local">Client-side</span></td></tr>
+    <tr><td>Newsletter</td><td>Email capture endpoint and footer form.</td><td><span class="status partial">No email platform yet</span></td></tr>
+  </table>
+  <h2 id="responsive">Responsive design</h2>
+  <ul>
+    <li>Mobile drawer replaces desktop department navigation below the desktop breakpoint.</li>
+    <li>Product grids preserve two useful columns on small screens and expand at larger breakpoints.</li>
+    <li>Filters become a touch-friendly drawer and brand filters become horizontally scrollable.</li>
+    <li>Cart controls use a compact two-column mobile arrangement.</li>
+    <li>Account navigation becomes a three-tab mobile control; order cards reorganize for narrow screens.</li>
+    <li>Footer, content pages and policy typography scale without fixed-width overflow.</li>
+  </ul>
+  <div class="footer-note"><span>Functional Modules</span><span>Current feature status</span></div>
+</section>
+
+<section class="page" id="state">
+  <div class="eyebrow">07 · State</div>
+  <h1>State and browser storage</h1>
+  <table>
+    <tr><th>Key / mechanism</th><th>Data</th><th>Reason</th></tr>
+    <tr><td><code>accessToken</code>, <code>refreshToken</code>, <code>user</code></td><td>Session identity</td><td>Stored in localStorage when “remember” is selected, otherwise sessionStorage.</td></tr>
+    <tr><td><code>shopore-cart</code></td><td>Cart items, selected product variant and quantity</td><td>Fast guest cart persistence and same-tab updates.</td></tr>
+    <tr><td><code>shopore-wishlist</code></td><td>Cached wishlist products</td><td>Immediate UI feedback; synchronized with the API after login.</td></tr>
+    <tr><td>Order snapshots</td><td>Product and address display fallback</td><td>Preserves display details when legacy order records are incomplete.</td></tr>
+    <tr><td>Profile avatar</td><td>Data URL</td><td>Local profile customization without server file storage.</td></tr>
+    <tr><td>Notification keys</td><td>Account/order events</td><td>Local notification bell behavior.</td></tr>
+    <tr><td>Return request key</td><td>Return tracking UI state</td><td>Prototype return workflow.</td></tr>
+  </table>
+  <h2>State strategy</h2>
+  <p>The project intentionally combines server state with lightweight browser persistence. This makes local demos resilient when backend data is incomplete, but production deployment should move authoritative identity, notification, return and avatar data to secure backend services.</p>
+  <div class="callout warn"><strong>Security implication</strong>localStorage and sessionStorage are readable by JavaScript. They are acceptable for this prototype but not ideal for long-lived production authentication. Secure HttpOnly cookies and server-enforced authorization are recommended.</div>
+  <h2>Cross-component updates</h2>
+  <p>Custom browser events such as cart, wishlist, notification and avatar update events allow the navbar and pages to refresh immediately after same-tab storage changes.</p>
+  <div class="footer-note"><span>State and Storage</span><span>Server state + local cache</span></div>
+</section>
+
+<section class="page" id="workflows">
+  <div class="eyebrow">08 · Workflows</div>
+  <h1>Core customer workflows</h1>
+  <h2>Product discovery to cart</h2>
+  <ol><li>User selects a department or searches.</li><li>Listing configuration and backend product data are normalized into cards.</li><li>User filters/sorts and opens <code>/products/[id]</code>.</li><li>User selects size and validates delivery PIN if desired.</li><li><code>addToCart</code> creates a variant-aware key from product ID, image and size.</li><li>The bag count updates through a custom browser event.</li></ol>
+  <h2>Checkout and COD order</h2>
+  <ol><li>User reviews cart items and quantities.</li><li>User logs in and selects or creates an address.</li><li>User selects Cash on Delivery.</li><li>Frontend posts the customer, address, total and item snapshots to <code>POST /api/orders</code>.</li><li>The backend creates an order record per cart item and returns order DTOs.</li><li>Frontend clears the bag and displays order history.</li></ol>
+  <h2>Online payment order</h2>
+  <ol><li>Frontend requests a provider order from <code>POST /api/payment/create-order</code>.</li><li>Razorpay or Google Pay is opened on the client.</li><li>Client receives payment identifiers/token data.</li><li>Frontend posts payment and order data to <code>POST /api/payment/verify</code>.</li><li>Backend creates order and payment records together.</li></ol>
+  <div class="callout warn"><strong>Current payment boundary</strong>The backend currently checks that a payment ID exists but does not cryptographically verify the Razorpay signature. This flow is appropriate for a local demonstration only.</div>
+  <h2>Verified-purchase review</h2>
+  <ol><li>Product review API finds an order item belonging to the user and product.</li><li>Cancelled/refunded orders are excluded.</li><li>One review is allowed per user and order item.</li><li>After saving, aggregate rating and review count are recalculated on the product.</li></ol>
+  <div class="footer-note"><span>Core Workflows</span><span>Browse, checkout, order, review</span></div>
+</section>
+
+<section class="page" id="backend">
+  <div class="eyebrow">09 · Backend</div>
+  <h1>Backend design</h1>
+  <h2>Application startup</h2>
+  <p><code>Program.cs</code> registers controllers, JSON number handling, Swagger, CORS, EF Core SQL Server and the application middleware. During startup it ensures the database exists and runs compatibility/normalization/seeding services.</p>
+  <div class="grid2">
+    <div class="card"><h3>Startup services</h3><ul><li><code>DatabaseSchemaService.EnsureCompatibleAsync</code></li><li><code>OrderNumberService.NormalizeExistingAsync</code></li><li><code>ProductSizeCatalog.SeedAsync</code></li><li><code>DemoReviewSeeder.SeedAsync</code></li></ul></div>
+    <div class="card"><h3>Service utilities</h3><ul><li>PBKDF2 password hashing</li><li>Random token generation</li><li>Slug generation</li><li>Response mapping</li><li>Product-size catalog behavior</li></ul></div>
+  </div>
+  <h2>Controller groups</h2>
+  <span class="pill">Auth</span><span class="pill">Products</span><span class="pill">Categories</span><span class="pill">Stock</span><span class="pill">Addresses</span><span class="pill">Profile</span><span class="pill">Orders</span><span class="pill">Payments</span><span class="pill">Wishlist</span><span class="pill">Reviews</span><span class="pill">PIN code</span><span class="pill">Contact</span><span class="pill">Chat</span><span class="pill">Subscriber</span>
+  <h2>Legacy database compatibility</h2>
+  <p>The backend is not designed against an empty ideal schema only. It accounts for existing columns and constraints in <code>Shopore_DB</code>. Compatibility services add or normalize required structures at startup. Response mapping and order snapshots also reduce frontend breakage when older records differ from current models.</p>
+  <div class="callout good"><strong>Strong architectural decision</strong>Order items store name, brand, image, size, color and price snapshots. Historical order display therefore does not depend entirely on the current product record.</div>
+  <h2>CORS</h2>
+  <p>The configured CORS policy allows local development origins: <code>localhost</code>, <code>127.0.0.1</code> and private hosts beginning with <code>192.168.</code>. Production domains must be explicitly configured before hosting.</p>
+  <div class="footer-note"><span>Backend Design</span><span>ASP.NET Core Web API</span></div>
+</section>
+
+<section class="page" id="api">
+  <div class="eyebrow">10 · API</div>
+  <h1>API reference — identity and customer</h1>
+  <table>
+    <tr><th>Method</th><th>Route</th><th>Purpose</th><th>Important input</th></tr>
+    <tr><td>POST</td><td><code>/api/auth/register</code></td><td>Create customer and return tokens/user.</td><td>fullName, email, password, phone?</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/login</code></td><td>Email/password login.</td><td>email, password</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/phone-login</code></td><td>Phone/password login.</td><td>phone, password</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/email-otp/request</code></td><td>Create 10-minute development OTP.</td><td>phone</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/email-otp/verify</code></td><td>Verify unused OTP and return session data.</td><td>phone, otp</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/reset-password</code></td><td>Reset password after matching email/phone.</td><td>phone, email, password, confirmPassword</td></tr>
+    <tr><td>GET</td><td><code>/api/Auth/verify-email?token=...</code></td><td>Development email verification response.</td><td>token</td></tr>
+    <tr><td>GET</td><td><code>/api/profile?user_id=...</code></td><td>Read profile.</td><td>user_id</td></tr>
+    <tr><td>PATCH</td><td><code>/api/profile</code></td><td>Update name, phone, birth date and gender.</td><td>user_id and profile fields</td></tr>
+    <tr><td>GET</td><td><code>/api/addresses?user_id=...</code></td><td>List non-deleted addresses.</td><td>user_id</td></tr>
+    <tr><td>POST</td><td><code>/api/addresses</code></td><td>Create delivery address.</td><td>user_id, name, phone, PIN, address, city, state</td></tr>
+    <tr><td>PUT</td><td><code>/api/addresses/{id}</code></td><td>Update owned address.</td><td>address ID and user_id</td></tr>
+    <tr><td>DELETE</td><td><code>/api/addresses/{id}?user_id=...</code></td><td>Soft-delete owned address.</td><td>address ID, user_id</td></tr>
+  </table>
+  <h2>Catalog, wishlist and reviews</h2>
+  <table>
+    <tr><th>Method</th><th>Route</th><th>Purpose</th></tr>
+    <tr><td>GET</td><td><code>/api/products</code></td><td>List active catalog products.</td></tr>
+    <tr><td>POST</td><td><code>/api/products/by-images</code></td><td>Resolve products from an image list.</td></tr>
+    <tr><td>GET</td><td><code>/api/products/{id}</code></td><td>Read product detail.</td></tr>
+    <tr><td>POST / PUT / DELETE</td><td><code>/api/products</code>, <code>/api/products/{id}</code></td><td>Create, update or deactivate catalog products.</td></tr>
+    <tr><td>GET / POST</td><td><code>/api/categories</code></td><td>List or create categories.</td></tr>
+    <tr><td>POST</td><td><code>/api/stock/adjust</code></td><td>Change variant stock and record a transaction.</td></tr>
+    <tr><td>GET / POST / DELETE</td><td><code>/api/wishlist</code></td><td>List, add or remove user wishlist products.</td></tr>
+    <tr><td>GET</td><td><code>/api/reviews/product/{productId}?user_id=...</code></td><td>Ratings summary, reviews and buyer eligibility.</td></tr>
+    <tr><td>POST</td><td><code>/api/reviews</code></td><td>Create/update a verified-purchase review.</td></tr>
+  </table>
+  <div class="footer-note"><span>API Reference</span><span>Identity and catalog</span></div>
+</section>
+
+<section class="page">
+  <div class="eyebrow">10 · API continued</div>
+  <h1>API reference — commerce and support</h1>
+  <table>
+    <tr><th>Method</th><th>Route</th><th>Purpose</th><th>Important behavior</th></tr>
+    <tr><td>GET</td><td><code>/api/orders?user_id=...</code></td><td>Customer order history.</td><td>Includes item/address snapshots; excludes smoke fixtures.</td></tr>
+    <tr><td>POST</td><td><code>/api/orders</code></td><td>Create COD or direct order.</td><td>Creates one order for each submitted cart item.</td></tr>
+    <tr><td>PATCH</td><td><code>/api/orders</code></td><td>Cancel order.</td><td>Rejects cancelled, refunded or delivered orders.</td></tr>
+    <tr><td>POST</td><td><code>/api/orders/{orderId}/split</code></td><td>Split multi-item legacy order.</td><td>Uses a DB transaction and adjusts associated payment rows.</td></tr>
+    <tr><td>POST</td><td><code>/api/payment/create-order</code></td><td>Create payment-order response.</td><td>Returns generated ID, paise amount and INR currency.</td></tr>
+    <tr><td>POST</td><td><code>/api/payment/verify</code></td><td>Persist paid orders and payments.</td><td>Currently does not verify provider signature cryptographically.</td></tr>
+    <tr><td>GET</td><td><code>/api/pincode/{pin}</code></td><td>Validate six-digit PIN and delivery availability.</td><td>Currently returns a fixed Kolkata/West Bengal location response.</td></tr>
+    <tr><td>POST</td><td><code>/api/contact</code></td><td>Validate a support message.</td><td>Email delivery is not connected.</td></tr>
+    <tr><td>POST</td><td><code>/api/chat</code></td><td>Answer common commerce questions.</td><td>Rule-based keyword response.</td></tr>
+    <tr><td>POST</td><td><code>/api/subscriber/subscribe</code></td><td>Accept newsletter signup.</td><td>No external mailing-list persistence.</td></tr>
+  </table>
+  <h2>Representative order payload</h2>
+  <pre>{
+  "user_id": 12,
+  "user_email": "customer@example.com",
+  "user_name": "Customer Name",
+  "address_id": 4,
+  "payment_method": "cod",
+  "total": 1299,
+  "items": [{
+    "product_id": "101",
+    "brand": "Shopore",
+    "name": "Product name",
+    "image": "/product.avif",
+    "size": "M",
+    "color": "Black",
+    "quantity": 1,
+    "price": 1299
+  }]
+}</pre>
+  <h2>Error conventions</h2>
+  <p>Most endpoints return <code>{ error: "..." }</code> or <code>{ success: false, message: "..." }</code> for failures. The frontend API helper tolerates JSON and plain text responses and returns a connection-specific message when the backend cannot be reached.</p>
+  <div class="footer-note"><span>API Reference</span><span>Commerce and support</span></div>
+</section>
+
+<section class="page" id="database">
+  <div class="eyebrow">11 · Data</div>
+  <h1>Database design</h1>
+  <div class="diagram">
+    <div class="grid3">
+      <div class="card entity"><h3>User</h3><p class="small">1 → many Addresses, Orders, WishlistItems, Reviews</p></div>
+      <div class="card entity"><h3>Product</h3><p class="small">1 → many Variants, Images, WishlistItems, OrderItems, Reviews</p></div>
+      <div class="card entity"><h3>Order</h3><p class="small">many → 1 User/Address; 1 → many OrderItems; 1 → Payment</p></div>
+    </div>
+    <div class="grid3">
+      <div class="card"><h3>Address</h3><p class="small">Customer delivery details and soft-delete state.</p></div>
+      <div class="card"><h3>ProductVariant</h3><p class="small">SKU, size, color, price and stock quantity.</p></div>
+      <div class="card"><h3>OrderItem</h3><p class="small">Product reference plus historical product snapshot.</p></div>
+    </div>
+  </div>
+  <table>
+    <tr><th>Entity</th><th>Key fields</th><th>Important constraints / behavior</th></tr>
+    <tr><td>User</td><td>ID, full name, email, phone, password hash, profile fields</td><td>Unique email; filtered unique phone; active flag.</td></tr>
+    <tr><td>Address</td><td>User ID, name, phone, PIN, address, city, state</td><td>Soft deletion and default-address flag.</td></tr>
+    <tr><td>Category / Brand</td><td>Name, slug, active</td><td>Unique slugs.</td></tr>
+    <tr><td>Product</td><td>Name, slug, category, image, price, rating</td><td>Unique slug; active flag; one-to-many variants/images.</td></tr>
+    <tr><td>ProductVariant</td><td>Product ID, SKU, size, color, price, stock</td><td>Unique SKU; variant-level stock.</td></tr>
+    <tr><td>WishlistItem</td><td>User ID, product ID</td><td>Unique user/product pair.</td></tr>
+    <tr><td>Order</td><td>Order number, user, address, status, totals, payment info</td><td>Unique order number; monetary precision 18,2.</td></tr>
+    <tr><td>OrderItem</td><td>Order/product/variant IDs, snapshot fields, quantity, prices</td><td>Protects historical display from catalog changes.</td></tr>
+    <tr><td>Payment</td><td>Order ID, provider IDs/signature, amount, status</td><td>Payment record linked to its order.</td></tr>
+    <tr><td>Review</td><td>User/product/order item, rating, comment, image</td><td>Unique user/order-item review; approval flag.</td></tr>
+    <tr><td>StockTransaction</td><td>Variant, quantity change, reason, reference</td><td>Inventory audit record.</td></tr>
+    <tr><td>LoginOtp</td><td>Phone, OTP, expiry, used</td><td>Ten-minute development OTP lifecycle.</td></tr>
+  </table>
+  <div class="callout"><strong>Data modelling rationale</strong>Variant-level price and stock are appropriate for commerce, while snapshot fields on order items ensure the customer still sees the purchased product details after catalog updates.</div>
+  <div class="footer-note"><span>Database Design</span><span>Shopore_DB</span></div>
+</section>
+
+<section class="page" id="security">
+  <div class="eyebrow">12 · Security</div>
+  <h1>Security assessment</h1>
+  <h2>Security already present</h2>
+  <ul><li>Passwords use PBKDF2-SHA256 with random 16-byte salt, a 32-byte key and 100,000 iterations.</li><li>Password comparison uses constant-time cryptographic equality.</li><li>SQL access is performed through EF Core rather than concatenated user input in normal controllers.</li><li>SQL credentials are intended to be stored using .NET user-secrets for local work.</li><li>CORS is limited to local/private development hosts.</li><li>Review eligibility is checked against an owned order item.</li><li>Address updates/deletes filter by both address and user ID.</li></ul>
+  <h2>Production security gaps</h2>
+  <table>
+    <tr><th>Gap</th><th>Current state</th><th>Required production change</th></tr>
+    <tr><td>Authentication enforcement</td><td>Random tokens are returned but not persisted or validated; no authentication middleware is configured.</td><td>Use ASP.NET Identity or signed JWT/access-refresh tokens; add <code>UseAuthentication</code> and <code>[Authorize]</code>.</td></tr>
+    <tr><td>Object authorization</td><td>Many endpoints trust a submitted <code>user_id</code>.</td><td>Derive user identity from authenticated claims, never from request ownership fields.</td></tr>
+    <tr><td>Token storage</td><td>Tokens live in local/session storage.</td><td>Prefer short-lived tokens and secure HttpOnly, SameSite cookies where appropriate.</td></tr>
+    <tr><td>Payment integrity</td><td>Payment signature is stored but not validated.</td><td>Verify Razorpay HMAC server-side; use provider API/webhooks; make order/payment updates idempotent.</td></tr>
+    <tr><td>OTP</td><td>OTP is returned in the API response.</td><td>Send through verified SMS/email provider, store a hash, rate-limit attempts and never return OTP.</td></tr>
+    <tr><td>Password reset</td><td>Email + phone match can reset password.</td><td>Require a single-use, expiring verified reset token.</td></tr>
+    <tr><td>Admin operations</td><td>Product/category/stock writes have no role protection.</td><td>Add admin roles, authorization policies and audit logging.</td></tr>
+    <tr><td>Rate limiting</td><td>Not configured.</td><td>Rate-limit login, OTP, contact, chat, review and payment endpoints.</td></tr>
+    <tr><td>Secrets</td><td>Connection-string pattern exists in settings and user-secrets guidance.</td><td>Remove committed secrets, rotate credentials and use host secret management.</td></tr>
+  </table>
+  <div class="callout warn"><strong>Do not accept real customer payments yet</strong>The current payment endpoints are demonstration code. Real payment processing requires server-side signature verification, webhook verification, idempotency and protected order ownership.</div>
+  <div class="footer-note"><span>Security Assessment</span><span>Prototype vs production</span></div>
+</section>
+
+<section class="page" id="setup">
+  <div class="eyebrow">13 · Setup</div>
+  <h1>Local development setup</h1>
+  <h2>Prerequisites</h2>
+  <ul><li>Node.js compatible with Next.js 16 and npm.</li><li>.NET 10 SDK.</li><li>Microsoft SQL Server with access to <code>Shopore_DB</code>.</li><li>A browser; optional Razorpay test key for payment UI.</li></ul>
+  <h2>1. Configure SQL Server secret</h2>
+  <pre>cd D:\Shoporestore\Shoporestore\Shoporestore_Backend
+dotnet user-secrets set "ConnectionStrings:ShoporeDb" \
+  "Server=YOUR_SERVER;Database=Shopore_DB;User Id=YOUR_USER;Password=YOUR_PASSWORD;TrustServerCertificate=True;MultipleActiveResultSets=True" \
+  --project .\Shoporestore.Api\Shoporestore.Api.csproj</pre>
+  <h2>2. Start the backend</h2>
+  <pre>dotnet run --project .\Shoporestore.Api\Shoporestore.Api.csproj --urls http://localhost:5285</pre>
+  <p>Swagger is available in development at <code>http://localhost:5285/swagger</code>.</p>
+  <h2>3. Configure frontend environment</h2>
+  <pre># .env.local
+NEXT_PUBLIC_API_URL=http://localhost:5285
+NEXT_PUBLIC_RAZORPAY_KEY_ID=your_test_key_if_used</pre>
+  <h2>4. Install and start frontend</h2>
+  <pre>cd D:\Shoporestore\Shoporestore
+npm install
+npm run dev</pre>
+  <p>Open the local URL printed by Next.js, normally <code>http://localhost:3000</code>.</p>
+  <h2>Recommended startup order</h2>
+  <ol><li>Start SQL Server.</li><li>Start ASP.NET Core and confirm Swagger/products endpoint.</li><li>Start Next.js.</li><li>Register a customer and complete a COD smoke test.</li></ol>
+  <div class="callout"><strong>Configuration rule</strong>Do not hard-code production URLs in components. Keep all frontend API requests behind <code>NEXT_PUBLIC_API_URL</code> and <code>apiFetch</code>.</div>
+  <div class="footer-note"><span>Local Setup</span><span>Database → API → frontend</span></div>
+</section>
+
+<section class="page" id="testing">
+  <div class="eyebrow">14 · Quality</div>
+  <h1>Testing and verification</h1>
+  <h2>Current verification commands</h2>
+  <pre># Frontend type validation
+npx tsc --noEmit
+
+# Production compilation and route generation
+npm run build
+
+# Backend compilation
+dotnet build .\Shoporestore_Backend\Shoporestore.Api\Shoporestore.Api.csproj
+
+# Interactive API testing
+http://localhost:5285/swagger</pre>
+  <h2>Recommended smoke-test checklist</h2>
+  <table>
+    <tr><th>Area</th><th>Test</th><th>Expected result</th></tr>
+    <tr><td>Responsive UI</td><td>320, 375, 768, 1024 and 1440px widths</td><td>No horizontal scroll; usable navigation and controls.</td></tr>
+    <tr><td>Auth</td><td>Register, duplicate registration, valid/invalid login</td><td>Correct success and error states.</td></tr>
+    <tr><td>Catalog</td><td>Open each department, filter, sort and product</td><td>Correct card data and stable routes.</td></tr>
+    <tr><td>Cart</td><td>Add two sizes, change quantity, remove item</td><td>Variant keys and totals update correctly.</td></tr>
+    <tr><td>Address</td><td>Create, edit, select and delete</td><td>Only owned active addresses appear.</td></tr>
+    <tr><td>COD</td><td>Place COD order</td><td>Order persists, bag clears, profile shows order.</td></tr>
+    <tr><td>Cancellation</td><td>Cancel eligible order</td><td>Status becomes cancelled and UI refreshes.</td></tr>
+    <tr><td>Review</td><td>Review purchased and unpurchased product</td><td>Purchased succeeds; unpurchased is rejected.</td></tr>
+    <tr><td>Failure</td><td>Stop API while frontend runs</td><td>Friendly connection error, no broken page.</td></tr>
+  </table>
+  <h2>Future automated testing</h2>
+  <ul><li>xUnit integration tests using a disposable SQL Server/Testcontainers database.</li><li>React component tests for filters, cart calculations and authentication forms.</li><li>Playwright end-to-end tests for registration, COD checkout and mobile navigation.</li><li>Contract tests between frontend request types and backend DTOs.</li><li>Security tests for IDOR, payment replay, OTP abuse and rate limits.</li></ul>
+  <div class="footer-note"><span>Testing</span><span>Focused verification strategy</span></div>
+</section>
+
+<section class="page" id="deployment">
+  <div class="eyebrow">15 · Hosting</div>
+  <h1>Deployment plan</h1>
+  <p>The frontend can be hosted independently, but a live full-stack system also needs a reachable ASP.NET Core service and SQL Server database. A frontend-only deployment cannot complete login, profiles, address persistence, orders or reviews.</p>
+  <div class="diagram">
+    <div class="flow">
+      <div class="node">Vercel / Node host<br><span class="small">Next.js frontend</span></div><div class="arrow">→</div>
+      <div class="node">Azure App Service / VM<br><span class="small">ASP.NET Core API</span></div><div class="arrow">→</div>
+      <div class="node">Azure SQL / hosted SQL Server<br><span class="small">Private credentials</span></div>
+    </div>
+  </div>
+  <h2>Deployment sequence</h2>
+  <ol><li>Provision hosted SQL Server and migrate/validate the schema.</li><li>Create a production SQL login with minimum permissions.</li><li>Deploy the backend with production connection string in host secrets.</li><li>Configure HTTPS, allowed origins, logging, health checks and backups.</li><li>Set <code>NEXT_PUBLIC_API_URL</code> to the public HTTPS API URL.</li><li>Deploy the frontend and run end-to-end smoke tests.</li><li>Configure real payment credentials only after verification logic is hardened.</li></ol>
+  <h2>Free/low-cost reality</h2>
+  <p>Frontend hosting commonly has free tiers. Persistent ASP.NET hosting and managed SQL Server are harder to keep completely free and may sleep, expire or limit database size. For interviews, a local demonstration plus repository and this architecture document is acceptable if you clearly explain that hosting cost and production security work remain.</p>
+  <h2>Interview-safe explanation</h2>
+  <div class="callout good"><strong>Suggested answer</strong>“The complete project runs locally with Next.js, ASP.NET Core and SQL Server. I have not exposed the database or prototype payment/authentication flow publicly because I would first add production authentication, payment verification, secrets management and a managed SQL environment. I can demonstrate the entire flow locally and explain the deployment architecture.”</div>
+  <div class="footer-note"><span>Deployment</span><span>Frontend + API + SQL Server</span></div>
+</section>
+
+<section class="page" id="limitations">
+  <div class="eyebrow">16 · Readiness</div>
+  <h1>Current limitations and technical debt</h1>
+  <table>
+    <tr><th>Area</th><th>Current limitation</th><th>Impact</th></tr>
+    <tr><td>Authentication</td><td>Tokens are random response strings and are not verified by the API.</td><td>Endpoints are not securely protected.</td></tr>
+    <tr><td>Authorization</td><td>Ownership is often supplied as user_id.</td><td>A malicious caller could attempt other IDs.</td></tr>
+    <tr><td>Payments</td><td>Provider order is locally generated; signature is not checked.</td><td>Not safe for real money.</td></tr>
+    <tr><td>OTP/email</td><td>OTP is returned; email verification/contact are placeholders.</td><td>No real delivery channel.</td></tr>
+    <tr><td>Shipping</td><td>PIN location and tracking timeline are simulated.</td><td>No real courier visibility.</td></tr>
+    <tr><td>Returns</td><td>Some return state is browser-local.</td><td>Not shared across devices and can be cleared.</td></tr>
+    <tr><td>Notifications</td><td>Mostly browser-local.</td><td>No push/email/SMS reliability.</td></tr>
+    <tr><td>Media</td><td>Large local asset collection and data URL images.</td><td>Repository/build size and performance.</td></tr>
+    <tr><td>Admin</td><td>No protected management UI.</td><td>Catalog/stock require API tooling.</td></tr>
+    <tr><td>Tests</td><td>No complete automated test suite.</td><td>Regression detection depends on manual checks.</td></tr>
+    <tr><td>Observability</td><td>Basic logging only.</td><td>Production diagnosis would be difficult.</td></tr>
+  </table>
+  <h2 id="roadmap">Recommended roadmap</h2>
+  <ol>
+    <li><strong>Security first:</strong> Identity/JWT or secure-cookie auth, claims-based authorization, roles, payment HMAC verification and secret rotation.</li>
+    <li><strong>Durable workflows:</strong> backend return/refund/notification tables and real email/SMS delivery.</li>
+    <li><strong>Operations:</strong> migrations, health checks, structured logs, backups and deployment pipeline.</li>
+    <li><strong>Quality:</strong> integration and end-to-end tests, accessibility audit and performance budgets.</li>
+    <li><strong>Commerce depth:</strong> admin dashboard, coupons, tax, shipping provider, inventory reservations and webhook-driven payment status.</li>
+  </ol>
+  <div class="footer-note"><span>Limitations and Roadmap</span><span>Production-readiness plan</span></div>
+</section>
+
+<section class="page" id="interview">
+  <div class="eyebrow">17 · Portfolio</div>
+  <h1>How to present this project in an interview</h1>
+  <h2>60-second summary</h2>
+  <div class="callout pink">“Shopore is a responsive full-stack e-commerce application. I built the customer storefront with Next.js, React and TypeScript, then separated the business API into ASP.NET Core with EF Core and SQL Server. It covers catalog filtering, product details, cart, wishlist, addresses, COD/online checkout, orders, cancellation and verified-buyer reviews. A key engineering challenge was making the new API work with an existing legacy SQL Server schema while keeping the frontend contract stable.”</div>
+  <h2>Best technical talking points</h2>
+  <ul><li><strong>Architecture:</strong> shared <code>apiFetch</code> bridge decouples frontend deployment from backend location.</li><li><strong>Data integrity:</strong> order item snapshots preserve purchase history.</li><li><strong>Legacy compatibility:</strong> startup schema services and response mapping support the existing database.</li><li><strong>User experience:</strong> consistent loaders, responsive grids, mobile drawers and touch-oriented controls.</li><li><strong>Review trust:</strong> backend checks an owned order item before allowing a review.</li><li><strong>Honest engineering judgment:</strong> identify security gaps and explain the exact production path.</li></ul>
+  <h2>Suggested demonstration order</h2>
+  <ol><li>Open responsive landing page and mobile navbar.</li><li>Browse a department; demonstrate filters and sorting.</li><li>Open a product, select size, verify PIN and add to bag.</li><li>Login/register and manage an address.</li><li>Place a COD order to avoid presenting prototype online payment as production-ready.</li><li>Open My Orders and show order detail/cancellation.</li><li>Show Swagger and explain SQL Server entities.</li><li>Finish with the security/hosting roadmap.</li></ol>
+  <h2>Questions you should be ready for</h2>
+  <table>
+    <tr><th>Question</th><th>Strong answer direction</th></tr>
+    <tr><td>Why Next.js with ASP.NET Core?</td><td>Next.js provides a rich React storefront; ASP.NET offers a typed API and strong SQL Server/EF Core integration.</td></tr>
+    <tr><td>Why localStorage for cart?</td><td>It provides instant guest persistence; production can merge it into a server cart after login.</td></tr>
+    <tr><td>How do you prevent price changes affecting orders?</td><td>Store price and product display snapshots in OrderItem at purchase time.</td></tr>
+    <tr><td>Is payment production-ready?</td><td>No; next step is server HMAC verification, webhooks and idempotency. The current flow is explicitly a prototype.</td></tr>
+    <tr><td>Why is it not live?</td><td>The three-tier system needs hosted .NET and SQL Server, plus security hardening before public exposure.</td></tr>
+  </table>
+  <div class="footer-note"><span>Interview Guide</span><span>Confident and honest presentation</span></div>
+</section>
+
+<section class="page" id="troubleshooting">
+  <div class="eyebrow">18 · Operations</div>
+  <h1>Troubleshooting guide</h1>
+  <table>
+    <tr><th>Symptom</th><th>Likely cause</th><th>Action</th></tr>
+    <tr><td>Frontend says it cannot connect</td><td>API is stopped or <code>NEXT_PUBLIC_API_URL</code> is wrong.</td><td>Start port 5285 backend; restart Next.js after environment changes.</td></tr>
+    <tr><td>CORS error</td><td>Frontend host is outside allowed local origins.</td><td>Add the exact production/development origin to backend CORS policy.</td></tr>
+    <tr><td>Backend fails at startup</td><td>Missing/invalid connection string or SQL Server unavailable.</td><td>Check user-secrets, network, SQL login and database name.</td></tr>
+    <tr><td>Invalid column / constraint error</td><td>Legacy schema differs from current entity assumptions.</td><td>Inspect live schema and update compatibility service before resetting data.</td></tr>
+    <tr><td>Old product data in order</td><td>Expected snapshot behavior.</td><td>Order history intentionally shows purchase-time details.</td></tr>
+    <tr><td>Wishlist returns product unavailable</td><td>Local catalog product ID does not exist in backend Products.</td><td>Seed/match the backend product or use backend-resolved product IDs.</td></tr>
+    <tr><td>Razorpay key missing</td><td>Environment variable absent.</td><td>Add test key to <code>.env.local</code> and restart frontend.</td></tr>
+    <tr><td>Order loading times out</td><td>Backend/SQL request exceeds the three-second UI budget.</td><td>Check API logs, database latency and indexes; UI keeps previous data when available.</td></tr>
+    <tr><td>Mobile menu overlays incorrectly</td><td>Stale dev bundle or viewport not refreshed.</td><td>Restart dev server, clear build cache if necessary, and retest at 320–640px.</td></tr>
+  </table>
+  <h2>Useful diagnostic endpoints</h2>
+  <pre>GET  http://localhost:5285/swagger
+GET  http://localhost:5285/api/products
+GET  http://localhost:5285/api/categories
+GET  http://localhost:5285/api/pincode/711113</pre>
+  <h2>Do not “fix” legacy errors by deleting data first</h2>
+  <p>The project deliberately uses a legacy database. Inspect the schema, constraint and payload mismatch before rebuilding tables. Compatibility changes are safer than resets when existing user/order data matters.</p>
+  <div class="footer-note"><span>Troubleshooting</span><span>Local full-stack diagnosis</span></div>
+</section>
+
+<section class="page" id="appendix">
+  <div class="eyebrow">19 · Appendix</div>
+  <h1>Commands, configuration and glossary</h1>
+  <h2>Frontend commands</h2>
+  <table><tr><th>Command</th><th>Purpose</th></tr><tr><td><code>npm run dev</code></td><td>Start development server.</td></tr><tr><td><code>npm run build</code></td><td>Create optimized production build.</td></tr><tr><td><code>npm start</code></td><td>Serve completed build.</td></tr><tr><td><code>npx tsc --noEmit</code></td><td>Type-check without emitting JavaScript.</td></tr><tr><td><code>npm run seed:products</code></td><td>Run the catalog seeding utility.</td></tr></table>
+  <h2>Backend commands</h2>
+  <table><tr><th>Command</th><th>Purpose</th></tr><tr><td><code>dotnet restore</code></td><td>Restore NuGet dependencies.</td></tr><tr><td><code>dotnet build</code></td><td>Compile backend.</td></tr><tr><td><code>dotnet run --project ... --urls http://localhost:5285</code></td><td>Run local API.</td></tr><tr><td><code>dotnet user-secrets list --project ...</code></td><td>Confirm local secrets without committing them.</td></tr></table>
+  <h2>Environment variables</h2>
+  <table><tr><th>Name</th><th>Visibility</th><th>Purpose</th></tr><tr><td><code>NEXT_PUBLIC_API_URL</code></td><td>Browser-visible</td><td>ASP.NET API base URL.</td></tr><tr><td><code>NEXT_PUBLIC_RAZORPAY_KEY_ID</code></td><td>Browser-visible public key</td><td>Launch Razorpay Checkout test UI.</td></tr><tr><td><code>ConnectionStrings:ShoporeDb</code></td><td>Backend secret</td><td>SQL Server connection string; never expose to browser.</td></tr></table>
+  <h2>Glossary</h2>
+  <table><tr><th>Term</th><th>Meaning</th></tr><tr><td>DTO</td><td>Data Transfer Object: request/response contract separate from database entities.</td></tr><tr><td>EF Core</td><td>Microsoft object-relational mapper used to access SQL Server.</td></tr><tr><td>Snapshot</td><td>Purchase-time copy of product/address data saved with an order.</td></tr><tr><td>CORS</td><td>Browser policy controlling which frontend origins may call the API.</td></tr><tr><td>Idempotency</td><td>Making repeated payment/order requests safe from duplicate processing.</td></tr><tr><td>PBKDF2</td><td>Password-based key derivation algorithm used for password hashing.</td></tr></table>
+  <div class="callout good"><strong>Final project statement</strong>Shoporestore demonstrates a broad, coherent e-commerce experience and a real frontend/API/database split. Its strongest portfolio value comes from the amount of customer flow implemented, the responsive interface, and the legacy SQL Server integration. Its next milestone is production security and durable external-service integration.</div>
+  <div class="footer-note"><span>Appendix</span><span>End of document</span></div>
+</section>
+
+</body>
+</html>
