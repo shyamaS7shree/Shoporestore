@@ -789,7 +789,12 @@ export default function Navbar() {
         .notifications-empty strong { color: #071225; font-size: 15px; }
         .notifications-empty span { color: #64748b; font-size: 13px; }
         .mobile-toggle { display: none; background: transparent; border: none; color: #8b8aaa; cursor: pointer; padding: 6px; }
-        .mobile-menu { background: rgba(255,255,255,0.95); border-bottom: 2px solid rgba(236,72,153,0.08); padding: 16px 24px 20px; }
+        .mobile-menu {
+          max-height: calc(100vh - 64px); overflow-y: auto;
+          background: #ffffff; border-bottom: 1px solid #f3d7e5;
+          padding: 16px 24px 20px;
+          box-shadow: 0 22px 55px rgba(15,23,42,0.18);
+        }
         .mobile-search { position: relative; margin-bottom: 12px; }
         .mobile-search input {
           width: 100%; padding: 10px 16px 10px 38px;
@@ -803,6 +808,33 @@ export default function Navbar() {
           border-bottom: 1px solid rgba(236,72,153,0.05); transition: color 0.2s;
         }
         .mobile-nav-link:hover { color: #ec4899; }
+        .mobile-account-card {
+          display: flex; align-items: center; gap: 11px;
+          margin: 12px 0 8px; padding: 13px;
+          border: 1px solid #f3d7e5; border-radius: 14px; background: #fff7fb;
+        }
+        .mobile-account-avatar {
+          width: 40px; height: 40px; flex: 0 0 auto; overflow: hidden;
+          display: flex; align-items: center; justify-content: center;
+          border-radius: 999px; background: #fce7f3; color: #be185d;
+          font-size: 16px; font-weight: 800;
+        }
+        .mobile-account-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .mobile-account-copy { min-width: 0; }
+        .mobile-account-copy strong { display: block; color: #111827; font-size: 13px; }
+        .mobile-account-copy span { display: block; margin-top: 2px; overflow: hidden; color: #64748b; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+        .mobile-account-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 7px 0 3px; }
+        .mobile-account-action {
+          display: flex; align-items: center; min-height: 40px; padding: 0 12px;
+          border: 1px solid #eef2f7; border-radius: 10px; background: #fff;
+          color: #334155; font-size: 12px; font-weight: 700; text-decoration: none;
+        }
+        .mobile-account-action:hover { border-color: #f9a8d4; background: #fff7fb; color: #be185d; }
+        .mobile-logout {
+          width: 100%; margin-top: 8px; padding: 10px 12px; border: 0;
+          border-radius: 10px; background: #fff1f2; color: #dc2626;
+          cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 700; text-align: left;
+        }
         .profile-dropdown-link {
           display: block; padding: 6px 0; color: #374151; font-size: 13px;
           text-decoration: none; transition: color 0.15s; background: none;
@@ -1472,13 +1504,43 @@ export default function Navbar() {
               {item.label}
             </Link>
           ))}
-          <button
-            className="mobile-nav-link"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left', color: '#ec4899', fontWeight: 600, padding: '10px 4px', fontSize: '15px' }}
-            onClick={() => { setIsOpen(false); setAuthModalOpen(true); }}
-          >
-            Login / Signup
-          </button>
+          {currentUser ? (
+            <div>
+              <div className="mobile-account-card">
+                <span className="mobile-account-avatar">
+                  {profileAvatar ? <img src={profileAvatar} alt="Profile" /> : userFirstName[0].toUpperCase()}
+                </span>
+                <span className="mobile-account-copy">
+                  <strong>Hi, {userFirstName}</strong>
+                  <span>{currentUser.email}</span>
+                </span>
+              </div>
+              <div className="mobile-account-links">
+                <Link href="/profile" className="mobile-account-action" onClick={() => setIsOpen(false)}>My Profile</Link>
+                <Link href="/profile?section=orders" className="mobile-account-action" onClick={() => setIsOpen(false)}>My Orders</Link>
+                <Link href="/wishlist" className="mobile-account-action" onClick={() => setIsOpen(false)}>Wishlist</Link>
+                <Link href="/profile?section=support" className="mobile-account-action" onClick={() => setIsOpen(false)}>Help & Support</Link>
+              </div>
+              <button
+                type="button"
+                className="mobile-logout"
+                onClick={() => {
+                  setIsOpen(false);
+                  setLogoutConfirmOpen(true);
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button
+              className="mobile-nav-link"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left', color: '#ec4899', fontWeight: 700, padding: '12px 4px', fontSize: '14px' }}
+              onClick={() => { setIsOpen(false); setAuthModalOpen(true); }}
+            >
+              Login / Signup
+            </button>
+          )}
         </div>
       )}
 
