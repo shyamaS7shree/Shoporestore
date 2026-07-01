@@ -24,6 +24,22 @@
 
 ---
 
+## 🎬 Full Project Walkthrough
+
+<p align="center">
+  <a href="./public/recshopore.mp4">
+    <img src="./public/landing.png" alt="Watch the complete Shopore project walkthrough" width="100%" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="./public/recshopore.mp4"><b>▶ Watch the complete Shopore demo</b></a>
+  <br />
+  <sub>Responsive storefront · Product discovery · Cart · Checkout · Account · Orders · Support</sub>
+</p>
+
+---
+
 ## 📸 Product Preview
 
 <p align="center">
