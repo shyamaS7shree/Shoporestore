@@ -13,6 +13,7 @@ import {
   PackageSearch,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { getWishlistEventName, isInWishlist, refreshWishlist, toggleWishlist } from '@/lib/wishlist';
 
@@ -458,6 +459,8 @@ function normalizeImagePath(path?: string) {
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function ProductListingPage({ config }: ProductListingPageProps) {
+  const searchParams = useSearchParams();
+  const searchTerm = (searchParams.get('search') || '').trim();
   const [sortOpen, setSortOpen] = useState(false);
   const [sortBy, setSortBy] = useState('Popularity');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -615,6 +618,38 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
   const products = useMemo(() => {
     let list = [...catalogProducts];
 
+    if (searchTerm) {
+      const normalizeSearchValue = (value?: string) =>
+        (value || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      const ignoredWords = new Set([
+        'women', 'woman', 'womens', 'men', 'mens', 'man',
+        'kids', 'kid', 'product', 'products', 'shop', 'buy', 'for',
+      ]);
+      const searchWords = normalizeSearchValue(searchTerm)
+        .split(' ')
+        .filter((word) => word && !ignoredWords.has(word));
+
+      if (searchWords.length > 0) {
+        list = list.filter((product) => {
+          const searchableText = normalizeSearchValue([
+            product.brand,
+            product.name,
+            product.description,
+            product.category,
+            product.subCategory,
+            product.color,
+            product.fit,
+          ].filter(Boolean).join(' '));
+
+          return searchWords.every((word) => searchableText.includes(word));
+        });
+      }
+    }
+
     // Filter by active brand pills
     if (activeBrands.length > 0) {
       list = list.filter((p) => activeBrands.includes(p.brand));
@@ -697,7 +732,7 @@ export default function ProductListingPage({ config }: ProductListingPageProps) 
     if (sortBy === 'Discount') list.sort((a, b) => (b.discount || 0) - (a.discount || 0));
 
     return list;
-  }, [catalogProducts, sortBy, activeBrands, filterSelections]);
+  }, [catalogProducts, sortBy, activeBrands, filterSelections, searchTerm]);
 
   const renderFilterPanel = () => {
     const sizeFilter = config.filters.find((filter) => filter.label.toLowerCase() === 'size');

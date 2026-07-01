@@ -17,7 +17,7 @@ import { subscribeNewsletter } from '@/lib/api';
 
 const shopLinks = [
   { label: 'Men', href: '/men/topwear' },
-  { label: 'Women', href: '/women' },
+  { label: 'Women', href: '/women/western-wear' },
   { label: 'Kids', href: '/kids/boys-clothing' },
   { label: 'Home', href: '/home' },
   { label: 'Beauty', href: '/beauty/makeup' },

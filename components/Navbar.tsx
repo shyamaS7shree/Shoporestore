@@ -328,7 +328,7 @@ export default function Navbar() {
 
   const navItems: Array<{ label: string; href: string; hasMega?: boolean; menuName?: MenuName }> = [
     { label: 'Men', href: '/men/topwear', hasMega: true, menuName: 'men' },
-    { label: 'Women', href: '/women', hasMega: true, menuName: 'women' },
+    { label: 'Women', href: '/women/western-wear', hasMega: true, menuName: 'women' },
     { label: 'Kids', href: '/kids/boys-clothing', hasMega: true, menuName: 'kids' },
     { label: 'Home', href: '/home', hasMega: true, menuName: 'home' },
     { label: 'Beauty', href: '/beauty/makeup', hasMega: true, menuName: 'beauty' },
@@ -440,7 +440,7 @@ export default function Navbar() {
     const sectionMatches: Array<[string, string[]]> = [
       ['/', ['home page', 'homepage', 'main page']],
       ['/men/topwear', ['men', 'man', 'mens', 'male', 'clothes', 'clothing']],
-      ['/women', ['women', 'woman', 'womens', 'female', 'womn', 'ladies']],
+      ['/women/western-wear', ['women', 'woman', 'womens', 'female', 'womn', 'ladies']],
       ['/kids/boys-clothing', ['kids', 'kid', 'children', 'child']],
       ['/home/bed-linen-furnishing', ['home', 'decor', 'furniture', 'bed sheet', 'bedsheet']],
       ['/home/hangers', ['hanger', 'hangers', 'cloth hanger', 'clothes hanger']],
@@ -507,7 +507,24 @@ export default function Navbar() {
       .filter((item) => item.score > 0)
       .sort((a, b) => b.score - a.score)[0];
 
-    router.push(match ? match.href : '/');
+    if (match) {
+      const departmentOnlySearches = new Set([
+        'men', 'man', 'mens', 'male',
+        'women', 'woman', 'womens', 'female', 'womn', 'ladies',
+        'kids', 'kid', 'children', 'child',
+        'home', 'beauty', 'genz', 'gen z',
+      ]);
+      const searchSuffix = departmentOnlySearches.has(normalizedQuery)
+        ? ''
+        : `?search=${encodeURIComponent(searchQuery.trim())}`;
+      router.push(`${match.href}${searchSuffix}`);
+    } else {
+      const currentDepartment = pathname.match(/^\/(men|women|kids|home|beauty|genz)(?:\/|$)/)?.[1];
+      const fallbackPath = currentDepartment
+        ? pathname
+        : '/women/western-wear';
+      router.push(`${fallbackPath}?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
     setSearchQuery('');
     setIsOpen(false);
   };
